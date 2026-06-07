@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1aXhsd2tqemlwbWFueW9lcndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTMzMTksImV4cCI6MjA5NjQyOTMxOX0.PNuqaaiODvZtyPJ6pxvGOX5-LgUEInmp-4bIUxfOQXY";
@@ -32,11 +32,15 @@ const FLAG_MAP = {
   "🇱🇦": "ลาว", "🇯🇵": "ญี่ปุ่น", "🇻🇳": "เวียดนาม",
   "🇨🇳": "จีน", "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน",
   "🇰🇷": "เกาหลี", "🇹🇭": "ไทย", "🇸🇬": "สิงคโปร์",
+  "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
+  "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
   "ลาว": "#ce1126", "ญี่ปุ่น": "#bc002d", "เวียดนาม": "#da251d",
   "จีน": "#de2910", "ฮ่องกง": "#de2910", "ไต้หวัน": "#003087",
   "เกาหลี": "#003478", "ไทย": "#A51931", "สิงคโปร์": "#EF3340",
+  "อเมริกา": "#3C3B6E", "อังกฤษ": "#012169", "เยอรมัน": "#000000",
+  "รัสเซีย": "#003580", "อินเดีย": "#FF9933",
 };
 
 function parseResults(text) {
@@ -47,10 +51,24 @@ function parseResults(text) {
     if (m) {
       const flag = m[1];
       const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อื่นๆ";
-      results.push({ flag, country, name: m[2].trim(), top3: m[3], bot2: m[4] });
+      results.push({ flag, country, name: m[2].trim(), top3: m[3], bot2: m[4], closed: [] });
     }
   }
   return results;
+}
+
+function parseClosed(text) {
+  const lines = text.trim().split("\n").filter(Boolean);
+  const map = {};
+  for (const line of lines) {
+    const m = line.match(/[\u{1F1E0}-\u{1F1FF}]{2}\s+(.+?)\s+::\s+(.+)$/u);
+    if (m) {
+      const name = m[1].trim();
+      const nums = m[2].trim().split(/\s+/).filter(n => /^\d{2}$/.test(n));
+      map[name] = nums;
+    }
+  }
+  return map;
 }
 
 export default function App() {
@@ -58,7 +76,9 @@ export default function App() {
   const [activeDate, setActiveDate] = useState(null);
   const [inputText, setInputText] = useState("");
   const [inputDate, setInputDate] = useState("");
+  const [closedText, setClosedText] = useState("");
   const [tab, setTab] = useState("view");
+  const [addTab, setAddTab] = useState("result");
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [drillName, setDrillName] = useState(null);
@@ -79,24 +99,43 @@ export default function App() {
     })();
   }, []);
 
-  const handleAdd = async () => {
+  const handleAddResult = async () => {
     if (!inputDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
     if (parsed.length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลที่ถูกรูปแบบ"); return; }
+    const existing = allData[inputDate.trim()] || [];
+    const merged = parsed.map(r => {
+      const old = existing.find(e => e.name === r.name);
+      return { ...r, closed: old?.closed || [] };
+    });
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
-      await api.upsert(inputDate.trim(), parsed);
-      const newData = { ...allData, [inputDate.trim()]: parsed };
-      setAllData(newData);
+      await api.upsert(inputDate.trim(), merged);
+      setAllData(prev => ({ ...prev, [inputDate.trim()]: merged }));
       setActiveDate(inputDate.trim());
       setSaveStatus("✓ บันทึกแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
-      setInputText("");
-      setInputDate("");
-      setTab("view");
-    } catch (e) {
-      setSaveStatus("⚠ บันทึกไม่ได้");
-    }
+      setInputText(""); setInputDate(""); setTab("view");
+    } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
+  };
+
+  const handleAddClosed = async () => {
+    if (!inputDate.trim() || !closedText.trim()) return;
+    const closedMap = parseClosed(closedText);
+    if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
+    const existing = allData[inputDate.trim()];
+    if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
+    const updated = existing.map(r => ({
+      ...r, closed: closedMap[r.name] !== undefined ? closedMap[r.name] : (r.closed || [])
+    }));
+    setSaveStatus("⏳ กำลังบันทึก...");
+    try {
+      await api.upsert(inputDate.trim(), updated);
+      setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
+      setSaveStatus("✓ บันทึกเลขปิดแล้ว");
+      setTimeout(() => setSaveStatus(""), 2000);
+      setClosedText(""); setTab("view");
+    } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
   };
 
   const handleDelete = async (date) => {
@@ -112,7 +151,7 @@ export default function App() {
     return Object.keys(allData).sort()
       .map(d => {
         const row = allData[d]?.find(r => r.name === name);
-        return row ? { date: d, top3: row.top3, bot2: row.bot2 } : null;
+        return row ? { date: d, top3: row.top3, bot2: row.bot2, closed: row.closed || [] } : null;
       })
       .filter(Boolean).reverse();
   };
@@ -124,6 +163,7 @@ export default function App() {
     if (!grouped[r.country]) grouped[r.country] = [];
     grouped[r.country].push(r);
   }
+  const hasClosed = current.some(r => r.closed?.length > 0);
 
   if (drillName) {
     const history = buildHistory(drillName);
@@ -144,32 +184,31 @@ export default function App() {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 2 }}>งวดวันที่</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{latest.date}</div>
               <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: 8, color: "#fff", marginBottom: 18 }}>{latest.top3}{latest.bot2}</div>
-              <div style={{ display: "flex", justifyContent: "center", gap: 50 }}>
-                <div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>3 ตัวบน</div>
-                  <div style={{ fontSize: 30, fontWeight: 900, color: "#ffd740" }}>{latest.top3}</div>
-                </div>
+              <div style={{ display: "flex", justifyContent: "center", gap: 40 }}>
+                <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>3 ตัวบน</div><div style={{ fontSize: 30, fontWeight: 900, color: "#ffd740" }}>{latest.top3}</div></div>
                 <div style={{ width: 1, background: "rgba(255,255,255,0.15)" }} />
-                <div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>2 ตัวล่าง</div>
-                  <div style={{ fontSize: 30, fontWeight: 900, color: "#80d8ff" }}>{latest.bot2}</div>
-                </div>
+                <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>2 ตัวล่าง</div><div style={{ fontSize: 30, fontWeight: 900, color: "#80d8ff" }}>{latest.bot2}</div></div>
+                {latest.closed?.length > 0 && <>
+                  <div style={{ width: 1, background: "rgba(255,255,255,0.15)" }} />
+                  <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>เลขปิด</div><div style={{ fontSize: 18, fontWeight: 700, color: "#ff8a80" }}>{latest.closed.join(" ")}</div></div>
+                </>}
               </div>
             </div>
           )}
           <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>สถิติย้อนหลัง · {history.length} งวด</div>
           <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 80px", padding: "10px 16px", background: `linear-gradient(90deg, ${accent}cc, rgba(0,0,0,0.5))`, fontSize: 12, fontWeight: 700, color: "#fff" }}>
-              <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตัวล่าง</span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "10px 16px", background: `linear-gradient(90deg, ${accent}cc, rgba(0,0,0,0.5))`, fontSize: 12, fontWeight: 700, color: "#fff" }}>
+              <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตัวล่าง</span><span style={{ textAlign: "center" }}>เลขปิด</span>
             </div>
             {history.map((h, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px 80px", padding: "11px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", background: i === 0 ? "rgba(255,215,64,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: i === 0 ? "#ffd740" : "#ccc", display: "flex", alignItems: "center", gap: 6 }}>
-                  {i === 0 && <span style={{ fontSize: 9, background: "#ffd740", color: "#000", borderRadius: 4, padding: "1px 5px", fontWeight: 800 }}>ล่าสุด</span>}
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "11px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", background: i === 0 ? "rgba(255,215,64,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: i === 0 ? "#ffd740" : "#ccc", display: "flex", alignItems: "center", gap: 5 }}>
+                  {i === 0 && <span style={{ fontSize: 9, background: "#ffd740", color: "#000", borderRadius: 4, padding: "1px 4px", fontWeight: 800 }}>ล่าสุด</span>}
                   {h.date}
                 </span>
-                <span style={{ textAlign: "center", fontSize: 20, fontWeight: 900, color: "#ffd740", letterSpacing: 2 }}>{h.top3}</span>
-                <span style={{ textAlign: "center", fontSize: 17, fontWeight: 700, color: "#80d8ff", letterSpacing: 1 }}>{h.bot2}</span>
+                <span style={{ textAlign: "center", fontSize: 19, fontWeight: 900, color: "#ffd740", letterSpacing: 2 }}>{h.top3}</span>
+                <span style={{ textAlign: "center", fontSize: 16, fontWeight: 700, color: "#80d8ff", letterSpacing: 1 }}>{h.bot2}</span>
+                <span style={{ textAlign: "center", fontSize: 13, fontWeight: 700, color: "#ff8a80" }}>{h.closed?.join(" ") || "-"}</span>
               </div>
             ))}
           </div>
@@ -192,15 +231,28 @@ export default function App() {
         ))}
       </div>
       {tab === "add" && (
-        <div style={{ padding: "20px 16px" }}>
+        <div style={{ padding: "16px 16px 0" }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            {[["result","🎰 ผลหวย"],["closed","🔒 เลขปิด"]].map(([t,label]) => (
+              <button key={t} onClick={() => setAddTab(t)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: addTab === t ? 700 : 400, background: addTab === t ? "rgba(255,138,128,0.2)" : "rgba(255,255,255,0.06)", color: addTab === t ? "#ff8a80" : "#888", borderBottom: addTab === t ? "2px solid #ff8a80" : "2px solid transparent" }}>{label}</button>
+            ))}
+          </div>
           <div style={cardStyle}>
             <label style={labelStyle}>วันที่ (เช่น 03 มิ.ย. 69)</label>
             <input value={inputDate} onChange={e => setInputDate(e.target.value)} placeholder="03 มิ.ย. 69" style={inputStyle} />
-            <label style={{ ...labelStyle, marginTop: 14 }}>วางข้อมูลผลหวย</label>
-            <textarea value={inputText} onChange={e => setInputText(e.target.value)}
-              placeholder={"🇱🇦 ลาวประตูชัย 🇱🇦 : 622 - 40\n🇻🇳 ฮานอยทีวี 🇻🇳 : 294 - 00\n..."}
-              rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
-            <button onClick={handleAdd} style={btnStyle}>💾 บันทึกข้อมูล</button>
+            {addTab === "result" ? <>
+              <label style={{ ...labelStyle, marginTop: 14 }}>วางข้อมูลผลหวย</label>
+              <textarea value={inputText} onChange={e => setInputText(e.target.value)}
+                placeholder={"🇱🇦 ลาวประตูชัย 🇱🇦 : 622 - 40\n🇻🇳 ฮานอยทีวี 🇻🇳 : 294 - 00\n..."}
+                rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
+              <button onClick={handleAddResult} style={btnStyle}>💾 บันทึกผลหวย</button>
+            </> : <>
+              <label style={{ ...labelStyle, marginTop: 14 }}>วางข้อมูลเลขปิด</label>
+              <textarea value={closedText} onChange={e => setClosedText(e.target.value)}
+                placeholder={"🇱🇦 ลาวประตูชัย  ::  16 60\n🇻🇳 ฮานอย HD  ::  22 65\n..."}
+                rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
+              <button onClick={handleAddClosed} style={{ ...btnStyle, background: "linear-gradient(90deg, #6a1b9a, #8e24aa)" }}>🔒 บันทึกเลขปิด</button>
+            </>}
             {saveStatus && <div style={{ marginTop: 10, color: saveStatus.includes("✓") ? "#69f0ae" : saveStatus.includes("⏳") ? "#ffd740" : "#ff8a80", fontSize: 13 }}>{saveStatus}</div>}
           </div>
         </div>
@@ -235,19 +287,23 @@ export default function App() {
                     <span style={{ float: "right", fontSize: 11, opacity: 0.7, fontWeight: 400 }}>{rows.length} รายการ</span>
                   </div>
                   <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "6px 14px", background: "rgba(0,0,0,0.3)", fontSize: 11, color: "#777" }}>
-                      <span>ชื่อหวย</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตัวล่าง</span>
+                    <div style={{ display: "grid", gridTemplateColumns: hasClosed ? "1fr 70px 60px 80px" : "1fr 80px 70px", padding: "6px 14px", background: "rgba(0,0,0,0.3)", fontSize: 11, color: "#777" }}>
+                      <span>ชื่อหวย</span>
+                      <span style={{ textAlign: "center" }}>3 ตัวบน</span>
+                      <span style={{ textAlign: "center" }}>2 ตัวล่าง</span>
+                      {hasClosed && <span style={{ textAlign: "center" }}>เลขปิด</span>}
                     </div>
                     {rows.map((r, i) => (
                       <div key={i}
                         onClick={() => { setDrillName(r.name); setDrillFlag(r.flag); setDrillCountry(r.country); }}
-                        style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.05)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", alignItems: "center", cursor: "pointer" }}
+                        style={{ display: "grid", gridTemplateColumns: hasClosed ? "1fr 70px 60px 80px" : "1fr 80px 70px", padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.05)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", alignItems: "center", cursor: "pointer" }}
                         onTouchStart={e => e.currentTarget.style.background = "rgba(255,138,128,0.1)"}
                         onTouchEnd={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)"}
                       >
-                        <span style={{ fontSize: 13, color: "#ddd" }}>{r.name} <span style={{ color: "#555" }}>›</span></span>
-                        <span style={{ textAlign: "center", fontSize: 18, fontWeight: 900, color: "#ffd740", letterSpacing: 2 }}>{r.top3}</span>
-                        <span style={{ textAlign: "center", fontSize: 16, fontWeight: 700, color: "#80d8ff", letterSpacing: 1 }}>{r.bot2}</span>
+                        <span style={{ fontSize: 12, color: "#ddd" }}>{r.name} <span style={{ color: "#555" }}>›</span></span>
+                        <span style={{ textAlign: "center", fontSize: 17, fontWeight: 900, color: "#ffd740", letterSpacing: 2 }}>{r.top3}</span>
+                        <span style={{ textAlign: "center", fontSize: 15, fontWeight: 700, color: "#80d8ff", letterSpacing: 1 }}>{r.bot2}</span>
+                        {hasClosed && <span style={{ textAlign: "center", fontSize: 12, fontWeight: 700, color: r.closed?.length ? "#ff8a80" : "#444" }}>{r.closed?.join(" ") || "-"}</span>}
                       </div>
                     ))}
                   </div>
