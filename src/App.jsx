@@ -1,9 +1,37 @@
 import { useState, useEffect, useCallback } from "react";
 
+const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1aXhsd2tqemlwbWFueW9lcndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTMzMTksImV4cCI6MjA5NjQyOTMxOX0.PNuqaaiODvZtyPJ6pxvGOX5-LgUEInmp-4bIUxfOQXY";
+
+const api = {
+  async getAll() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/lottery_results?select=*&order=date.asc`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  },
+  async upsert(date, results) {
+    await fetch(`${SUPABASE_URL}/rest/v1/lottery_results`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json", Prefer: "resolution=merge-duplicates"
+      },
+      body: JSON.stringify({ date, results })
+    });
+  },
+  async remove(date) {
+    await fetch(`${SUPABASE_URL}/rest/v1/lottery_results?date=eq.${encodeURIComponent(date)}`, {
+      method: "DELETE",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+  }
+};
+
 const FLAG_MAP = {
   "🇱🇦": "ลาว", "🇯🇵": "ญี่ปุ่น", "🇻🇳": "เวียดนาม",
   "🇨🇳": "จีน", "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน",
-  "🇰🇷": "เกาหลี", "🇹🇭": "ไทย", "🇸": "สิงคโปร์",
+  "🇰🇷": "เกาหลี", "🇹🇭": "ไทย", "🇸🇬": "สิงคโปร์",
 };
 const COLOR_MAP = {
   "ลาว": "#ce1126", "ญี่ปุ่น": "#bc002d", "เวียดนาม": "#da251d",
@@ -25,8 +53,6 @@ function parseResults(text) {
   return results;
 }
 
-const STORAGE_KEY = "lottery-daily-results";
-
 export default function App() {
   const [allData, setAllData] = useState({});
   const [activeDate, setActiveDate] = useState(null);
@@ -40,48 +66,46 @@ export default function App() {
   const [drillCountry, setDrillCountry] = useState("");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setAllData(parsed);
-        const dates = Object.keys(parsed).sort();
+    (async () => {
+      try {
+        const rows = await api.getAll();
+        const data = {};
+        for (const row of rows) data[row.date] = row.results;
+        setAllData(data);
+        const dates = Object.keys(data).sort();
         if (dates.length > 0) setActiveDate(dates[dates.length - 1]);
-      }
-    } catch (e) {}
-    setLoaded(true);
+      } catch (e) {}
+      setLoaded(true);
+    })();
   }, []);
 
-  const saveData = useCallback((data) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      setSaveStatus("✓ บันทึกแล้ว");
-      setTimeout(() => setSaveStatus(""), 2000);
-    } catch (e) {
-      setSaveStatus("⚠ บันทึกไม่ได้");
-    }
-  }, []);
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!inputDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
     if (parsed.length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลที่ถูกรูปแบบ"); return; }
-    const newData = { ...allData, [inputDate.trim()]: parsed };
-    setAllData(newData);
-    setActiveDate(inputDate.trim());
-    saveData(newData);
-    setInputText("");
-    setInputDate("");
-    setTab("view");
+    setSaveStatus("⏳ กำลังบันทึก...");
+    try {
+      await api.upsert(inputDate.trim(), parsed);
+      const newData = { ...allData, [inputDate.trim()]: parsed };
+      setAllData(newData);
+      setActiveDate(inputDate.trim());
+      setSaveStatus("✓ บันทึกแล้ว");
+      setTimeout(() => setSaveStatus(""), 2000);
+      setInputText("");
+      setInputDate("");
+      setTab("view");
+    } catch (e) {
+      setSaveStatus("⚠ บันทึกไม่ได้");
+    }
   };
 
-  const handleDelete = (date) => {
+  const handleDelete = async (date) => {
+    await api.remove(date);
     const newData = { ...allData };
     delete newData[date];
     setAllData(newData);
     const dates = Object.keys(newData).sort();
     setActiveDate(dates.length > 0 ? dates[dates.length - 1] : null);
-    saveData(newData);
   };
 
   const buildHistory = (name) => {
@@ -117,7 +141,7 @@ export default function App() {
         <div style={{ padding: 16 }}>
           {latest && (
             <div style={{ background: `linear-gradient(135deg, ${accent}cc, #1a1a2ecc)`, borderRadius: 16, padding: "22px 16px", marginBottom: 20, textAlign: "center", border: `1px solid ${accent}55`, boxShadow: `0 8px 30px ${accent}44` }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 2 }}>งวดวันที</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 2 }}>งวดวันที่</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{latest.date}</div>
               <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: 8, color: "#fff", marginBottom: 18 }}>{latest.top3}{latest.bot2}</div>
               <div style={{ display: "flex", justifyContent: "center", gap: 50 }}>
@@ -133,7 +157,7 @@ export default function App() {
               </div>
             </div>
           )}
-          <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>สถิติยอนหลัง · {history.length} งวด</div>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>สถิติย้อนหลัง · {history.length} งวด</div>
           <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 80px", padding: "10px 16px", background: `linear-gradient(90deg, ${accent}cc, rgba(0,0,0,0.5))`, fontSize: 12, fontWeight: 700, color: "#fff" }}>
               <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตัวล่าง</span>
@@ -159,7 +183,7 @@ export default function App() {
       <div style={headerStyle}>
         <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>🎯 สรุปผลหวยประจำวัน</div>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
-          {loaded ? `${dates.length} วน · ${Object.values(allData).flat().length} รายการ` : "กำลังโหลด..."}
+          {loaded ? `${dates.length} วัน · ${Object.values(allData).flat().length} รายการ` : "⏳ กำลังโหลด..."}
         </div>
       </div>
       <div style={{ display: "flex", borderBottom: "2px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.3)" }}>
@@ -177,7 +201,7 @@ export default function App() {
               placeholder={"🇱🇦 ลาวประตูชัย 🇱🇦 : 622 - 40\n🇻🇳 ฮานอยทีวี 🇻🇳 : 294 - 00\n..."}
               rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
             <button onClick={handleAdd} style={btnStyle}>💾 บันทึกข้อมูล</button>
-            {saveStatus && <div style={{ marginTop: 10, color: saveStatus.includes("✓") ? "#69f0ae" : "#ff8a80", fontSize: 13 }}>{saveStatus}</div>}
+            {saveStatus && <div style={{ marginTop: 10, color: saveStatus.includes("✓") ? "#69f0ae" : saveStatus.includes("⏳") ? "#ffd740" : "#ff8a80", fontSize: 13 }}>{saveStatus}</div>}
           </div>
         </div>
       )}
@@ -185,9 +209,9 @@ export default function App() {
         <div style={{ padding: "16px 16px 0" }}>
           {dates.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.25)" }}>
-              <div style={{ fontSize: 48 }}>📭</div>
-              <div style={{ marginTop: 12, fontSize: 14 }}>ยังไม่มีขอมูล</div>
-              <div style={{ marginTop: 6, fontSize: 12 }}>กดแทบ "เพิ่มข้อมูล" เพื่อเริ่มต้น</div>
+              <div style={{ fontSize: 48 }}>{loaded ? "📭" : "⏳"}</div>
+              <div style={{ marginTop: 12, fontSize: 14 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
+              {loaded && <div style={{ marginTop: 6, fontSize: 12 }}>กดแท็บ "เพิ่มข้อมูล" เพื่อเริ่มต้น</div>}
             </div>
           ) : (
             <>
