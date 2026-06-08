@@ -64,8 +64,9 @@ function parseClosed(text) {
     const m = line.match(/[\u{1F1E0}-\u{1F1FF}]{2}\s+(.+?)\s+::\s+(.+)$/u);
     if (m) {
       const name = m[1].trim();
-      const nums = m[2].trim().split(/\s+/).filter(n => /^\d{2}$/.test(n));
-      map[name] = nums;
+      const nums = m[2].match(/\b\d{2}\b/g) || [];
+if (nums.length > 0) map[name] = nums;
+
     }
   }
   return map;
