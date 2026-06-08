@@ -39,7 +39,7 @@ const COLOR_MAP = {
   "ลาว": "#ce1126", "ญี่ปุ่น": "#bc002d", "เวียดนาม": "#da251d",
   "จีน": "#de2910", "ฮ่องกง": "#de2910", "ไต้หวัน": "#003087",
   "เกาหลี": "#003478", "ไทย": "#A51931", "สิงคโปร์": "#EF3340",
-  "อเมริกา": "#3C3B6E", "อังกฤษ": "#012169", "เยอรมัน": "#000000",
+  "อเมริกา": "#3C3B6E", "อังกฤษ": "#012169", "เยอรมัน": "#333",
   "รัสเซีย": "#003580", "อินเดีย": "#FF9933",
 };
 
@@ -61,12 +61,11 @@ function parseClosed(text) {
   const lines = text.trim().split("\n").filter(Boolean);
   const map = {};
   for (const line of lines) {
-    const m = line.match(/[\u{1F1E0}-\u{1F1FF}]{2}\s+(.+?)\s+::\s+(.+)$/u);
+    const m = line.match(/[\u{1F1E0}-\u{1F1FF}]{2}\s+(.+?)\s+[∷:]{1,2}\s*(.+)$/u);
     if (m) {
       const name = m[1].trim();
       const nums = m[2].match(/\b\d{2}\b/g) || [];
-if (nums.length > 0) map[name] = nums;
-
+      if (nums.length > 0) map[name] = nums;
     }
   }
   return map;
@@ -250,7 +249,7 @@ export default function App() {
             </> : <>
               <label style={{ ...labelStyle, marginTop: 14 }}>วางข้อมูลเลขปิด</label>
               <textarea value={closedText} onChange={e => setClosedText(e.target.value)}
-                placeholder={"🇱🇦 ลาวประตูชัย  ::  16 60\n🇻🇳 ฮานอย HD  ::  22 65\n..."}
+                placeholder={"🇱🇦 ลาวประตูชัย  ::  16 60\n🇻🇳 ฮานอย HD  ∷  บ 44 97\n..."}
                 rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
               <button onClick={handleAddClosed} style={{ ...btnStyle, background: "linear-gradient(90deg, #6a1b9a, #8e24aa)" }}>🔒 บันทึกเลขปิด</button>
             </>}
