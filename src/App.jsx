@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/App.jsx << 'ENDOFFILE'
 import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
@@ -40,11 +39,11 @@ const api = {
 };
 
 const FLAG_MAP = {
-  "🇱🇦": "ลาว", "🇯🇵": "ญี่ปุ่น", "🇻🇳": "เวียดนาม",
-  "🇨🇳": "จีน", "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน",
-  "🇰🇷": "เกาหลี", "🇹🇭": "ไทย", "🇸🇬": "สิงคโปร์",
+  "🇱": "ลาว", "🇯🇵": "ญปุ่น", "🇻🇳": "เวียดนาม",
+  "🇨": "จีน", "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน",
+  "🇰🇷": "เกาหลี", "🇹🇭": "ไทย", "🇸": "สิงคโปร์",
   "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
-  "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
+  "🇷🇺": "รัสเซีย", "🇮🇳": "อนเดีย",
 };
 const COLOR_MAP = {
   "ลาว": "#ce1126", "ญี่ปุ่น": "#bc002d", "เวียดนาม": "#da251d",
@@ -119,7 +118,7 @@ export default function App() {
       const old = existing.find(e => e.name === r.name);
       return { ...r, closed: old?.closed || [] };
     });
-    setSaveStatus("⏳ กำลังบันทึก...");
+    setSaveStatus("⏳ กำลังบนทึก...");
     try {
       await api.upsert(inputDate.trim(), merged);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: merged }));
@@ -133,7 +132,7 @@ export default function App() {
   const handleAddClosed = async () => {
     if (!inputDate.trim() || !closedText.trim()) return;
     const closedMap = parseClosed(closedText);
-    if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
+    if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบขอมูลเลขปิด"); return; }
     const existing = allData[inputDate.trim()];
     if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
     const updated = existing.map(r => {
@@ -144,7 +143,7 @@ export default function App() {
     try {
       await api.patch(inputDate.trim(), updated);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
-      setSaveStatus("✓ บันทึกเลขปิดแล้ว");
+      setSaveStatus("✓ บนทึกเลขปิดแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setClosedText(""); setTab("view");
     } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
@@ -199,7 +198,7 @@ export default function App() {
               <div style={{ display: "flex", justifyContent: "center", gap: 40 }}>
                 <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>3 ตัวบน</div><div style={{ fontSize: 30, fontWeight: 900, color: "#ffd740" }}>{latest.top3}</div></div>
                 <div style={{ width: 1, background: "rgba(255,255,255,0.15)" }} />
-                <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>2 ตัวล่าง</div><div style={{ fontSize: 30, fontWeight: 900, color: "#80d8ff" }}>{latest.bot2}</div></div>
+                <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>2 ตัวลาง</div><div style={{ fontSize: 30, fontWeight: 900, color: "#80d8ff" }}>{latest.bot2}</div></div>
                 {latest.closed?.length > 0 && <>
                   <div style={{ width: 1, background: "rgba(255,255,255,0.15)" }} />
                   <div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>เลขปิด</div><div style={{ fontSize: 18, fontWeight: 700, color: "#ff8a80" }}>{latest.closed.join(" ")}</div></div>
@@ -215,7 +214,7 @@ export default function App() {
             {history.map((h, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "11px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", background: i === 0 ? "rgba(255,215,64,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", alignItems: "center" }}>
                 <span style={{ fontSize: 12, color: i === 0 ? "#ffd740" : "#ccc", display: "flex", alignItems: "center", gap: 5 }}>
-                  {i === 0 && <span style={{ fontSize: 9, background: "#ffd740", color: "#000", borderRadius: 4, padding: "1px 4px", fontWeight: 800 }}>ล่าสุด</span>}
+                  {i === 0 && <span style={{ fontSize: 9, background: "#ffd740", color: "#000", borderRadius: 4, padding: "1px 4px", fontWeight: 800 }}>ล่าสด</span>}
                   {h.date}
                 </span>
                 <span style={{ textAlign: "center", fontSize: 19, fontWeight: 900, color: "#ffd740", letterSpacing: 2 }}>{h.top3}</span>
@@ -232,7 +231,7 @@ export default function App() {
   return (
     <div style={outerStyle}>
       <div style={headerStyle}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>🎯 สรุปผลหวยประจำวัน</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>🎯 สรุปผลหวยประจวัน</div>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
           {loaded ? `${dates.length} วัน · ${Object.values(allData).flat().length} รายการ` : "⏳ กำลังโหลด..."}
         </div>
@@ -250,18 +249,18 @@ export default function App() {
             ))}
           </div>
           <div style={cardStyle}>
-            <label style={labelStyle}>วันที่ (เช่น 03 มิ.ย. 69)</label>
+            <label style={labelStyle}>วนที่ (เช่น 03 มิ.ย. 69)</label>
             <input value={inputDate} onChange={e => setInputDate(e.target.value)} placeholder="03 มิ.ย. 69" style={inputStyle} />
             {addTab === "result" ? <>
-              <label style={{ ...labelStyle, marginTop: 14 }}>วางข้อมูลผลหวย</label>
+              <label style={{ ...labelStyle, marginTop: 14 }}>วางขอมูลผลหวย</label>
               <textarea value={inputText} onChange={e => setInputText(e.target.value)}
-                placeholder={"🇱🇦 ลาวประตูชัย 🇱🇦 : 622 - 40\n🇻🇳 ฮานอยทีวี 🇻🇳 : 294 - 00\n..."}
+                placeholder={"🇱🇦 ลาวประตูชัย 🇱🇦 : 622 - 40\n🇻🇳 ฮานอยทวี 🇻🇳 : 294 - 00\n..."}
                 rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
               <button onClick={handleAddResult} style={btnStyle}>💾 บันทึกผลหวย</button>
             </> : <>
               <label style={{ ...labelStyle, marginTop: 14 }}>วางข้อมูลเลขปิด</label>
               <textarea value={closedText} onChange={e => setClosedText(e.target.value)}
-                placeholder={"🇱🇦 ลาวประตูชัย  ::  16 60\n🇻🇳 ฮานอย HD  ∷  บ 44 97\n..."}
+                placeholder={"🇱🇦 ลาวประตูชัย  ::  16 60\n🇻 ฮานอย HD  ∷  บ 44 97\n..."}
                 rows={10} style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
               <button onClick={handleAddClosed} style={{ ...btnStyle, background: "linear-gradient(90deg, #6a1b9a, #8e24aa)" }}>🔒 บันทึกเลขปิด</button>
             </>}
@@ -275,7 +274,7 @@ export default function App() {
             <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.25)" }}>
               <div style={{ fontSize: 48 }}>{loaded ? "📭" : "⏳"}</div>
               <div style={{ marginTop: 12, fontSize: 14 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
-              {loaded && <div style={{ marginTop: 6, fontSize: 12 }}>กดแท็บ "เพิ่มข้อมูล" เพื่อเริ่มต้น</div>}
+              {loaded && <div style={{ marginTop: 6, fontSize: 12 }}>กดแท็บ "เพิ่มข้อมูล" เพื่อเริมต้น</div>}
             </div>
           ) : (
             <>
@@ -288,7 +287,7 @@ export default function App() {
                 <div style={{ ...cardStyle, display: "flex", justifyContent: "space-between", padding: "12px 16px", marginBottom: 14 }}>
                   <div style={{ textAlign: "center" }}><div style={{ fontSize: 20, fontWeight: 900, color: "#ff8a80" }}>{current.length}</div><div style={{ fontSize: 11, color: "#888" }}>รายการ</div></div>
                   <div style={{ textAlign: "center" }}><div style={{ fontSize: 20, fontWeight: 900, color: "#80d8ff" }}>{Object.keys(grouped).length}</div><div style={{ fontSize: 11, color: "#888" }}>ประเทศ</div></div>
-                  <div style={{ textAlign: "center" }}><div style={{ fontSize: 13, fontWeight: 700, color: "#b9f6ca" }}>{activeDate}</div><div style={{ fontSize: 11, color: "#888" }}>วันที่</div></div>
+                  <div style={{ textAlign: "center" }}><div style={{ fontSize: 13, fontWeight: 700, color: "#b9f6ca" }}>{activeDate}</div><div style={{ fontSize: 11, color: "#888" }}>วนที่</div></div>
                   <button onClick={() => handleDelete(activeDate)} style={{ background: "rgba(255,50,50,0.15)", border: "1px solid rgba(255,50,50,0.3)", color: "#ff8a80", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>
                 </div>
               )}
@@ -336,5 +335,3 @@ const cardStyle = { background: "rgba(255,255,255,0.05)", borderRadius: 12, padd
 const labelStyle = { display: "block", fontSize: 12, color: "#aaa", marginBottom: 6, fontWeight: 600 };
 const inputStyle = { width: "100%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "10px 12px", color: "#fff", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" };
 const btnStyle = { marginTop: 14, width: "100%", padding: "12px", background: "linear-gradient(90deg, #c62828, #e53935)", border: "none", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 15, fontWeight: 700, cursor: "pointer" };
-ENDOFFILE
-echo "done"
