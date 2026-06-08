@@ -1,3 +1,4 @@
+cat > /mnt/user-data/outputs/App.jsx << 'ENDOFFILE'
 import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
@@ -18,6 +19,16 @@ const api = {
         "Content-Type": "application/json", Prefer: "resolution=merge-duplicates"
       },
       body: JSON.stringify({ date, results })
+    });
+  },
+  async patch(date, results) {
+    await fetch(`${SUPABASE_URL}/rest/v1/lottery_results?date=eq.${encodeURIComponent(date)}`, {
+      method: "PATCH",
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ results })
     });
   },
   async remove(date) {
@@ -116,42 +127,22 @@ export default function App() {
       setSaveStatus("✓ บันทึกแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setInputText(""); setInputDate(""); setTab("view");
-} catch (e) { setSaveStatus("⚠ Error: " + e.message); }
-
+    } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
   };
 
-const handleAddClosed = async () => {
-  if (!inputDate.trim() || !closedText.trim()) return;
-  const closedMap = parseClosed(closedText);
-  if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
-  const existing = allData[inputDate.trim()];
-  if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
-  const updated = existing.map(r => {
-    const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
-    return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
-  });
-  setSaveStatus("⏳ กำลังบันทึก...");
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/lottery_results?date=eq.${encodeURIComponent(inputDate.trim())}`, {
-      method: "PATCH",
-      headers: {
-        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ results: updated })
+  const handleAddClosed = async () => {
+    if (!inputDate.trim() || !closedText.trim()) return;
+    const closedMap = parseClosed(closedText);
+    if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
+    const existing = allData[inputDate.trim()];
+    if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
+    const updated = existing.map(r => {
+      const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
+      return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
     });
-    setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
-    setSaveStatus("✓ บันทึกเลขปิดแล้ว");
-    setTimeout(() => setSaveStatus(""), 2000);
-    setClosedText("");
-    setTab("view");
-  } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
-};
-
-
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
-      await api.upsert(inputDate.trim(), updated);
+      await api.patch(inputDate.trim(), updated);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
       setSaveStatus("✓ บันทึกเลขปิดแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
@@ -345,3 +336,5 @@ const cardStyle = { background: "rgba(255,255,255,0.05)", borderRadius: 12, padd
 const labelStyle = { display: "block", fontSize: 12, color: "#aaa", marginBottom: 6, fontWeight: 600 };
 const inputStyle = { width: "100%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "10px 12px", color: "#fff", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" };
 const btnStyle = { marginTop: 14, width: "100%", padding: "12px", background: "linear-gradient(90deg, #c62828, #e53935)", border: "none", borderRadius: 10, color: "#fff", fontFamily: "inherit", fontSize: 15, fontWeight: 700, cursor: "pointer" };
+ENDOFFILE
+echo "done"
