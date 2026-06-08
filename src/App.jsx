@@ -120,16 +120,34 @@ export default function App() {
 
   };
 
-  const handleAddClosed = async () => {
-    if (!inputDate.trim() || !closedText.trim()) return;
-    const closedMap = parseClosed(closedText);
-    if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
-    const existing = allData[inputDate.trim()];
-   if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
-const updated = existing.map(r => {
-  const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
-  return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
-});
+const handleAddClosed = async () => {
+  if (!inputDate.trim() || !closedText.trim()) return;
+  const closedMap = parseClosed(closedText);
+  if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
+  const existing = allData[inputDate.trim()];
+  if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
+  const updated = existing.map(r => {
+    const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
+    return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
+  });
+  setSaveStatus("⏳ กำลังบันทึก...");
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/lottery_results?date=eq.${encodeURIComponent(inputDate.trim())}`, {
+      method: "PATCH",
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ results: updated })
+    });
+    setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
+    setSaveStatus("✓ บันทึกเลขปิดแล้ว");
+    setTimeout(() => setSaveStatus(""), 2000);
+    setClosedText("");
+    setTab("view");
+  } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
+};
+
 
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
