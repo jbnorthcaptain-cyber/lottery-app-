@@ -124,10 +124,12 @@ export default function App() {
     const closedMap = parseClosed(closedText);
     if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลเลขปิด"); return; }
     const existing = allData[inputDate.trim()];
-    if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
-    const updated = existing.map(r => ({
-      ...r, closed: closedMap[r.name] !== undefined ? closedMap[r.name] : (r.closed || [])
-    }));
+   if (!existing) { setSaveStatus("⚠ ยังไม่มีผลหวยวันนี้ กรุณาเพิ่มผลก่อน"); return; }
+const updated = existing.map(r => {
+  const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
+  return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
+});
+
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
       await api.upsert(inputDate.trim(), updated);
