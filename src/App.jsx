@@ -116,7 +116,8 @@ export default function App() {
       setSaveStatus("✓ บันทึกแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setInputText(""); setInputDate(""); setTab("view");
-    } catch (e) { setSaveStatus("⚠ บันทึกไม่ได้"); }
+} catch (e) { setSaveStatus("⚠ Error: " + e.message); }
+
   };
 
   const handleAddClosed = async () => {
