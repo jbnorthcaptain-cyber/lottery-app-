@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/App.jsx << 'ENDOFFILE'
 import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
@@ -190,121 +189,25 @@ export default function App() {
     minHeight: "100vh",
     background: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 40%, #0a1a2e 100%)",
     fontFamily: "'SF Pro Display', 'Sarabun', sans-serif",
-    color: "#fff",
-    paddingBottom: 50,
+    color: "#fff", paddingBottom: 50,
   };
 
-  const globalStyles = `
-    * { box-sizing: border-box; }
-    input, textarea { outline: none; }
-    button { transition: all 0.15s; }
-    button:active { transform: scale(0.97); opacity: 0.8; }
-    ::-webkit-scrollbar { display: none; }
-    ::placeholder { color: rgba(255,255,255,0.25); }
-  `;
-
-  // Hamburger Menu Sheet
-  const MenuSheet = () => (
-    <>
-      {/* Overlay */}
-      <div onClick={() => setMenuOpen(false)} style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-        backdropFilter: "blur(4px)", zIndex: 200,
-      }} />
-      {/* Sheet */}
-      <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 201,
-        ...glassStrong, borderRadius: "28px 28px 0 0",
-        padding: "12px 20px 40px",
-      }}>
-        {/* Handle */}
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.25)", margin: "0 auto 20px" }} />
-
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>เมนู</div>
-
-        {/* ดูผล */}
-        <button onClick={() => { setTab("view"); setMenuOpen(false); }} style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 14,
-          padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer",
-          background: tab === "view" ? "rgba(116,143,252,0.2)" : "rgba(255,255,255,0.06)",
-          color: tab === "view" ? "#748ffc" : "#fff", fontFamily: "inherit",
-          fontSize: 16, fontWeight: tab === "view" ? 700 : 500, marginBottom: 8,
-          textAlign: "left",
-        }}>
-          <span style={{ fontSize: 20 }}>📋</span>
-          <span>ดูผลหวย</span>
-          {tab === "view" && <span style={{ marginLeft: "auto", fontSize: 12, color: "#748ffc" }}>● กำลังใช้</span>}
-        </button>
-
-        {/* เพิ่มข้อมูล */}
-        <button onClick={() => { setTab("add"); setAddTab("result"); setMenuOpen(false); }} style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 14,
-          padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer",
-          background: tab === "add" && addTab === "result" ? "rgba(169,227,75,0.2)" : "rgba(255,255,255,0.06)",
-          color: tab === "add" && addTab === "result" ? "#a9e34b" : "#fff", fontFamily: "inherit",
-          fontSize: 16, fontWeight: 500, marginBottom: 8, textAlign: "left",
-        }}>
-          <span style={{ fontSize: 20 }}>➕</span>
-          <span>เพิ่มผลหวย</span>
-          {tab === "add" && addTab === "result" && <span style={{ marginLeft: "auto", fontSize: 12, color: "#a9e34b" }}>● กำลังใช้</span>}
-        </button>
-
-        {/* เพิ่มเลขปิด */}
-        <button onClick={() => { setTab("add"); setAddTab("closed"); setMenuOpen(false); }} style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 14,
-          padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer",
-          background: tab === "add" && addTab === "closed" ? "rgba(255,212,59,0.2)" : "rgba(255,255,255,0.06)",
-          color: tab === "add" && addTab === "closed" ? "#ffd43b" : "#fff", fontFamily: "inherit",
-          fontSize: 16, fontWeight: 500, marginBottom: 16, textAlign: "left",
-        }}>
-          <span style={{ fontSize: 20 }}>🔒</span>
-          <span>เพิ่มเลขปิด</span>
-          {tab === "add" && addTab === "closed" && <span style={{ marginLeft: "auto", fontSize: 12, color: "#ffd43b" }}>● กำลังใช้</span>}
-        </button>
-
-        {/* Divider */}
-        {activeDate && (
-          <>
-            <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 16 }} />
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>
-              จัดการข้อมูล · {activeDate}
-            </div>
-            <button onClick={() => handleDelete(activeDate)} style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 14,
-              padding: "16px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.3)", cursor: "pointer",
-              background: "rgba(255,100,100,0.12)", color: "#ff8fa3", fontFamily: "inherit",
-              fontSize: 16, fontWeight: 600, textAlign: "left",
-            }}>
-              <span style={{ fontSize: 20 }}>🗑</span>
-              <span>ลบข้อมูลวันที่ {activeDate}</span>
-            </button>
-          </>
-        )}
-      </div>
-    </>
-  );
-
-  // ── DRILL VIEW ──────────────────────────────────
   if (drillName) {
     const history = buildHistory(drillName);
     const latest = history[0];
     const accent = COLOR_MAP[drillCountry] || "#74c0fc";
     return (
       <div style={baseStyle}>
-        <style>{globalStyles}</style>
+        <style>{`*{box-sizing:border-box}input,textarea{outline:none}button{transition:all .15s}button:active{transform:scale(.97);opacity:.8}::-webkit-scrollbar{display:none}::placeholder{color:rgba(255,255,255,.25)}`}</style>
         <div style={{ position: "fixed", top: -100, left: -100, width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, ${accent}18, transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
-
         <div style={{ ...glassStrong, borderRadius: "0 0 28px 28px", padding: "54px 20px 16px", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => setDrillName(null)} style={{ ...glass, border: "none", color: accent, fontSize: 15, fontWeight: 600, padding: "8px 16px", cursor: "pointer", background: `${accent}20` }}>
-            ‹ กลับ
-          </button>
+          <button onClick={() => setDrillName(null)} style={{ ...glass, border: "none", color: accent, fontSize: 15, fontWeight: 600, padding: "8px 16px", cursor: "pointer", background: `${accent}20` }}>‹ กลับ</button>
           <div style={{ flex: 1, textAlign: "center" }}>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{drillFlag} {drillName}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>ผลย้อนหลัง</div>
           </div>
           <div style={{ width: 70 }} />
         </div>
-
         <div style={{ padding: "20px 16px", position: "relative", zIndex: 1 }}>
           {latest && (
             <div style={{ ...glassStrong, padding: "28px 20px", marginBottom: 20, textAlign: "center", background: `linear-gradient(135deg, ${accent}14, rgba(255,255,255,0.05))`, borderColor: `${accent}40` }}>
@@ -337,7 +240,7 @@ export default function App() {
             {history.map((h, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "13px 16px", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : "none", background: i === 0 ? `${accent}0d` : "transparent", alignItems: "center" }}>
                 <span style={{ fontSize: 13, color: i === 0 ? accent : "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", gap: 6 }}>
-                  {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800, letterSpacing: 0.5 }}>ล่าสุด</span>}
+                  {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสุด</span>}
                   {h.date}
                 </span>
                 <span style={{ textAlign: "center", fontSize: 20, fontWeight: 800, color: accent, letterSpacing: 2 }}>{h.top3}</span>
@@ -351,17 +254,60 @@ export default function App() {
     );
   }
 
-  // ── MAIN VIEW ──────────────────────────────────
   return (
     <div style={baseStyle}>
-      <style>{globalStyles}</style>
+      <style>{`*{box-sizing:border-box}input,textarea{outline:none}button{transition:all .15s}button:active{transform:scale(.97);opacity:.8}::-webkit-scrollbar{display:none}::placeholder{color:rgba(255,255,255,.25)}`}</style>
 
-      {/* Ambient blobs */}
       <div style={{ position: "fixed", top: -150, right: -100, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, #748ffc14, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
       <div style={{ position: "fixed", bottom: -100, left: -100, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, #ff6b6b0e, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-      {/* Hamburger Menu */}
-      {menuOpen && <MenuSheet />}
+      {/* Hamburger Menu Sheet */}
+      {menuOpen && (
+        <>
+          <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200 }} />
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 201, ...glassStrong, borderRadius: "28px 28px 0 0", padding: "12px 20px 44px" }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.25)", margin: "0 auto 20px" }} />
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>เมนู</div>
+
+            {[
+              { t: "view", at: null, icon: "📋", label: "ดูผลหวย", color: "#748ffc" },
+              { t: "add", at: "result", icon: "➕", label: "เพิ่มผลหวย", color: "#a9e34b" },
+              { t: "add", at: "closed", icon: "🔒", label: "เพิ่มเลขปิด", color: "#ffd43b" },
+            ].map(({ t, at, icon, label, color }) => {
+              const active = tab === t && (at === null || addTab === at);
+              return (
+                <button key={label} onClick={() => { setTab(t); if (at) setAddTab(at); setMenuOpen(false); }} style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 14,
+                  padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer",
+                  background: active ? `${color}28` : "rgba(255,255,255,0.06)",
+                  color: active ? color : "#fff", fontFamily: "inherit",
+                  fontSize: 16, fontWeight: active ? 700 : 500, marginBottom: 8, textAlign: "left",
+                }}>
+                  <span style={{ fontSize: 20 }}>{icon}</span>
+                  <span>{label}</span>
+                  {active && <span style={{ marginLeft: "auto", fontSize: 11, color }}>● กำลังใช้</span>}
+                </button>
+              );
+            })}
+
+            {activeDate && (
+              <>
+                <div style={{ height: 1, background: "rgba(255,255,255,0.1)", margin: "8px 0 16px" }} />
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>จัดการ · {activeDate}</div>
+                <button onClick={() => handleDelete(activeDate)} style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 14,
+                  padding: "16px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.3)", cursor: "pointer",
+                  background: "rgba(255,100,100,0.12)", color: "#ff8fa3", fontFamily: "inherit",
+                  fontSize: 16, fontWeight: 600, textAlign: "left",
+                }}>
+                  <span style={{ fontSize: 20 }}>🗑</span>
+                  <span>ลบข้อมูลวันที่ {activeDate}</span>
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Header */}
       <div style={{ ...glassStrong, borderRadius: "0 0 32px 32px", padding: "54px 20px 18px", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -373,35 +319,19 @@ export default function App() {
             {loaded ? `${dates.length} วัน · ${Object.values(allData).flat().length} รายการ` : "⏳ กำลังโหลด..."}
           </div>
         </div>
-        {/* Hamburger Button */}
-        <button onClick={() => setMenuOpen(true)} style={{
-          width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
-          background: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)",
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5,
-        }}>
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: 18, height: 2, borderRadius: 1, background: "#fff", opacity: i === 1 ? 0.6 : 1 }} />
-          ))}
+        <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          {[0,1,2].map(i => <div key={i} style={{ width: 18, height: 2, borderRadius: 1, background: "#fff", opacity: i === 1 ? 0.6 : 1 }} />)}
         </button>
       </div>
 
-      {/* CONTENT */}
       <div style={{ padding: "16px", position: "relative", zIndex: 1 }}>
-
-        {/* ADD TAB */}
         {tab === "add" && (
           <>
             <div style={{ ...glass, display: "flex", padding: 4, gap: 4, marginBottom: 16 }}>
               {[["result","🎰 ผลหวย"],["closed","🔒 เลขปิด"]].map(([t, label]) => (
-                <button key={t} onClick={() => setAddTab(t)} style={{
-                  flex: 1, padding: "10px 0", borderRadius: 14, border: "none", cursor: "pointer",
-                  fontFamily: "inherit", fontSize: 13, fontWeight: addTab === t ? 700 : 400,
-                  background: addTab === t ? "rgba(255,255,255,0.15)" : "transparent",
-                  color: addTab === t ? "#fff" : "rgba(255,255,255,0.4)",
-                }}>{label}</button>
+                <button key={t} onClick={() => setAddTab(t)} style={{ flex: 1, padding: "10px 0", borderRadius: 14, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: addTab === t ? 700 : 400, background: addTab === t ? "rgba(255,255,255,0.15)" : "transparent", color: addTab === t ? "#fff" : "rgba(255,255,255,0.4)" }}>{label}</button>
               ))}
             </div>
-
             <div style={{ ...glassStrong, padding: 20 }}>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>วันที่</div>
               <input value={inputDate} onChange={e => setInputDate(e.target.value)} placeholder="03 มิ.ย. 69"
@@ -409,57 +339,34 @@ export default function App() {
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>
                 {addTab === "result" ? "วางข้อมูลผลหวย" : "วางข้อมูลเลขปิด"}
               </div>
-              <textarea
-                value={addTab === "result" ? inputText : closedText}
+              <textarea value={addTab === "result" ? inputText : closedText}
                 onChange={e => addTab === "result" ? setInputText(e.target.value) : setClosedText(e.target.value)}
                 placeholder={addTab === "result" ? "🇱🇦 ลาวประตูชัย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
-                rows={10}
-                style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 16px", color: "#fff", fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: 16 }}
-              />
-              <button onClick={addTab === "result" ? handleAddResult : handleAddClosed} style={{
-                width: "100%", padding: "15px", borderRadius: 18, border: "none", cursor: "pointer",
-                fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff",
-                background: addTab === "result" ? "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" : "linear-gradient(135deg, rgba(138,43,226,0.8), rgba(116,143,252,0.6))",
-                backdropFilter: "blur(10px)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-              }}>
+                rows={10} style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 16px", color: "#fff", fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: 16 }} />
+              <button onClick={addTab === "result" ? handleAddResult : handleAddClosed} style={{ width: "100%", padding: "15px", borderRadius: 18, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: addTab === "result" ? "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" : "linear-gradient(135deg, rgba(138,43,226,0.8), rgba(116,143,252,0.6))", backdropFilter: "blur(10px)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
                 {addTab === "result" ? "💾 บันทึกผลหวย" : "🔒 บันทึกเลขปิด"}
               </button>
-              {saveStatus && (
-                <div style={{ marginTop: 12, textAlign: "center", fontSize: 13, color: saveStatus.includes("✓") ? "#a9e34b" : saveStatus.includes("⏳") ? "#ffd43b" : "#ff8fa3" }}>
-                  {saveStatus}
-                </div>
-              )}
+              {saveStatus && <div style={{ marginTop: 12, textAlign: "center", fontSize: 13, color: saveStatus.includes("✓") ? "#a9e34b" : saveStatus.includes("⏳") ? "#ffd43b" : "#ff8fa3" }}>{saveStatus}</div>}
             </div>
           </>
         )}
 
-        {/* VIEW TAB */}
         {tab === "view" && (
           <>
             {dates.length === 0 ? (
               <div style={{ textAlign: "center", padding: "80px 20px", color: "rgba(255,255,255,0.25)" }}>
                 <div style={{ fontSize: 56 }}>{loaded ? "📭" : "⏳"}</div>
                 <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
-                {loaded && <div style={{ marginTop: 8, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>กดปุ่ม ☰ มุมขวาบนเพื่อเพิ่มข้อมูล</div>}
+                {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มุมขวาบนเพื่อเพิ่มข้อมูล</div>}
               </div>
             ) : (
               <>
-                {/* Date pills */}
                 <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 16 }}>
                   {dates.map(d => (
-                    <button key={d} onClick={() => setActiveDate(d)} style={{
-                      flexShrink: 0, padding: "8px 18px", borderRadius: 20, cursor: "pointer",
-                      fontSize: 13, fontFamily: "inherit", fontWeight: activeDate === d ? 700 : 400,
-                      background: activeDate === d ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)",
-                      color: activeDate === d ? "#fff" : "rgba(255,255,255,0.45)",
-                      backdropFilter: "blur(10px)",
-                      border: activeDate === d ? "1px solid rgba(255,255,255,0.28)" : "1px solid rgba(255,255,255,0.08)",
-                      boxShadow: activeDate === d ? "0 2px 16px rgba(255,255,255,0.08)" : "none",
-                    }}>{d}</button>
+                    <button key={d} onClick={() => setActiveDate(d)} style={{ flexShrink: 0, padding: "8px 18px", borderRadius: 20, cursor: "pointer", fontSize: 13, fontFamily: "inherit", fontWeight: activeDate === d ? 700 : 400, background: activeDate === d ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)", color: activeDate === d ? "#fff" : "rgba(255,255,255,0.45)", backdropFilter: "blur(10px)", border: activeDate === d ? "1px solid rgba(255,255,255,0.28)" : "1px solid rgba(255,255,255,0.08)", boxShadow: activeDate === d ? "0 2px 16px rgba(255,255,255,0.08)" : "none" }}>{d}</button>
                   ))}
                 </div>
 
-                {/* Stats */}
                 {activeDate && (
                   <div style={{ ...glass, display: "flex", justifyContent: "space-around", alignItems: "center", padding: "16px 20px", marginBottom: 16 }}>
                     <div style={{ textAlign: "center" }}>
@@ -479,7 +386,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Grouped results */}
                 {Object.entries(grouped).map(([country, rows]) => {
                   const accent = COLOR_MAP[country] || "#74c0fc";
                   return (
@@ -497,15 +403,12 @@ export default function App() {
                           {hasClosed && <span style={{ textAlign: "center" }}>เลขปิด</span>}
                         </div>
                         {rows.map((r, i) => (
-                          <div key={i}
-                            onClick={() => { setDrillName(r.name); setDrillFlag(r.flag); setDrillCountry(r.country); }}
+                          <div key={i} onClick={() => { setDrillName(r.name); setDrillFlag(r.flag); setDrillCountry(r.country); }}
                             style={{ display: "grid", gridTemplateColumns: hasClosed ? "1fr 70px 60px 76px" : "1fr 80px 70px", padding: "13px 16px", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : "none", alignItems: "center", cursor: "pointer" }}
                             onTouchStart={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
                             onTouchEnd={e => e.currentTarget.style.background = "transparent"}
                           >
-                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>
-                              {r.name} <span style={{ color: "rgba(255,255,255,0.2)" }}>›</span>
-                            </span>
+                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{r.name} <span style={{ color: "rgba(255,255,255,0.2)" }}>›</span></span>
                             <span style={{ textAlign: "center", fontSize: 18, fontWeight: 800, color: accent, letterSpacing: 2 }}>{r.top3}</span>
                             <span style={{ textAlign: "center", fontSize: 16, fontWeight: 700, color: "#c3fae8" }}>{r.bot2}</span>
                             {hasClosed && <span style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: r.closed?.length ? "#ffd43b" : "rgba(255,255,255,0.15)" }}>{r.closed?.join(" ") || "—"}</span>}
