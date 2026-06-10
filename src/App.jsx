@@ -159,14 +159,16 @@ export default function App() {
   };
 
   const handleDelete = async (date) => {
-    await api.remove(date);
-    const newData = { ...allData };
-    delete newData[date];
-    setAllData(newData);
-    const dates = Object.keys(newData).sort();
-    setActiveDate(dates.length > 0 ? dates[dates.length - 1] : null);
-    setMenuOpen(false);
-  };
+  if (!window.confirm(`ยืนยันลบข้อมูลวันที่ ${date} ?`)) return;
+  await api.remove(date);
+  const newData = { ...allData };
+  delete newData[date];
+  setAllData(newData);
+  const dates = Object.keys(newData).sort();
+  setActiveDate(dates.length > 0 ? dates[dates.length - 1] : null);
+  setMenuOpen(false);
+};
+
 
   const buildHistory = (name) => {
     return Object.keys(allData).sort()
