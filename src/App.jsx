@@ -75,6 +75,21 @@ function parseClosed(text) {
   return map;
 }
 
+function buildBreakdown(nums) {
+  const total = nums.length;
+  if (total === 0) return null;
+  const inRange = (lo, hi) => nums.filter(n => n >= lo && n <= hi).length;
+  const pct = c => Number(((c / total) * 100).toFixed(2));
+  const evenCount = nums.filter(n => (n % 10) % 2 === 0).length;
+  return {
+    total,
+    half: [pct(inRange(0, 49)), pct(inRange(50, 99))],
+    thirds: [pct(inRange(0, 33)), pct(inRange(34, 66)), pct(inRange(67, 99))],
+    quarters: [pct(inRange(0, 24)), pct(inRange(25, 49)), pct(inRange(50, 74)), pct(inRange(75, 99))],
+    evenOdd: [pct(evenCount), pct(total - evenCount)],
+  };
+}
+
 const glass = {
   background: "rgba(255,255,255,0.08)",
   backdropFilter: "blur(20px) saturate(180%)",
@@ -89,6 +104,25 @@ const glassStrong = {
   border: "1px solid rgba(255,255,255,0.22)",
   borderRadius: 24,
 };
+
+function Divider() {
+  return <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "14px 0" }} />;
+}
+
+function StatRow({ label, value, accent }) {
+  const v = Math.min(100, Math.max(0, value));
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{label}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: accent }}>{value}%</span>
+      </div>
+      <div style={{ height: 6, borderRadius: 999, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${v}%`, borderRadius: 999, background: `linear-gradient(90deg, ${accent}99, ${accent})`, transition: "width .4s ease" }} />
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [allData, setAllData] = useState({});
@@ -109,6 +143,9 @@ export default function App() {
   const [adminInput, setAdminInput] = useState("");
   const [adminError, setAdminError] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [statsName, setStatsName] = useState("");
+  const [statsMode, setStatsMode] = useState("bot"); // 'top' = 2 ตัวบน, 'bot' = 2 ตัวล่าง
+  const [statsCopied, setStatsCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -200,6 +237,66 @@ export default function App() {
         const row = allData[d]?.find(r => r.name === name);
         return row ? { date: d, top3: row.top3, bot2: row.bot2, closed: row.closed || [] } : null;
       }).filter(Boolean).reverse();
+  };
+
+  // --- สถิติโอกาสออกเลข ---
+  const getLotteryList = () => {
+    const map = {};
+    for (const date of Object.keys(allData)) {
+      for (const r of allData[date]) {
+        if (!map[r.name]) map[r.name] = { flag: r.flag, country: r.country };
+      }
+    }
+    return Object.entries(map).map(([name, v]) => ({ name, flag: v.flag, country: v.country }));
+  };
+
+  const computeStatsNumbers = (name) => {
+    const top2List = [];
+    const bot2List = [];
+    for (const date of Object.keys(allData)) {
+      for (const r of allData[date]) {
+        if (r.name !== name) continue;
+        if (r.top3 && /^\d{3}$/.test(r.top3)) top2List.push(parseInt(r.top3.slice(-2), 10));
+        if (r.bot2 && /^\d{2}$/.test(r.bot2)) bot2List.push(parseInt(r.bot2, 10));
+      }
+    }
+    return { top2List, bot2List };
+  };
+
+  const lotteryList = getLotteryList();
+  const activeStatsName = statsName || (lotteryList[0]?.name || "");
+  const statsInfo = lotteryList.find(l => l.name === activeStatsName);
+  const statsAccent = COLOR_MAP[statsInfo?.country] || "#74c0fc";
+  const { top2List, bot2List } = computeStatsNumbers(activeStatsName);
+  const statsNums = statsMode === "top" ? top2List : bot2List;
+  const statsBreakdown = buildBreakdown(statsNums);
+
+  const copyStatsText = () => {
+    if (!statsBreakdown) return;
+    const modeLabel = statsMode === "top" ? "2 ตัวบน" : "2 ตัวล่าง";
+    const flag = statsInfo?.flag || "";
+    const text = `${flag} คำนวณ${activeStatsName} (${modeLabel}) ${flag}
+➖➖➖➖➖➖➖➖➖➖
+เลข 00 ถึง 49 โอกาสออก ${statsBreakdown.half[0]}%
+เลข 50 ถึง 99 โอกาสออก ${statsBreakdown.half[1]}%
+
+เลข 00 ถึง 33 โอกาสออก ${statsBreakdown.thirds[0]}%
+เลข 34 ถึง 66 โอกาสออก ${statsBreakdown.thirds[1]}%
+เลข 67 ถึง 99 โอกาสออก ${statsBreakdown.thirds[2]}%
+
+เลข 00 ถึง 24 โอกาสออก ${statsBreakdown.quarters[0]}%
+เลข 25 ถึง 49 โอกาสออก ${statsBreakdown.quarters[1]}%
+เลข 50 ถึง 74 โอกาสออก ${statsBreakdown.quarters[2]}%
+เลข 75 ถึง 99 โอกาสออก ${statsBreakdown.quarters[3]}%
+
+เลขลงท้ายเลขคู่ โอกาสออก ${statsBreakdown.evenOdd[0]}%
+เลขลงท้ายเลขคี่ โอกาสออก ${statsBreakdown.evenOdd[1]}%
+
+(คำนวณจาก ${modeLabel} ทั้งหมด ${statsBreakdown.total} งวด)`;
+    navigator.clipboard.writeText(text).then(() => {
+      setStatsCopied(true);
+      setTimeout(() => setStatsCopied(false), 1500);
+    });
   };
 
   const dates = Object.keys(allData).sort();
@@ -335,6 +432,13 @@ export default function App() {
               {tab === "view" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#748ffc" }}>● กำลังใช้</span>}
             </button>
 
+            {/* คำนวณสถิติ - ไม่ต้องใส่รหัส */}
+            <button onClick={() => { setTab("stats"); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "stats" ? "rgba(255,212,59,0.2)" : "rgba(255,255,255,0.06)", color: tab === "stats" ? "#ffd43b" : "#fff", fontFamily: "inherit", fontSize: 16, fontWeight: tab === "stats" ? 700 : 500, marginBottom: 8, textAlign: "left" }}>
+              <span style={{ fontSize: 20 }}>📊</span>
+              <span>คำนวณสถิติ</span>
+              {tab === "stats" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#ffd43b" }}>● กำลังใช้</span>}
+            </button>
+
             {/* เพิ่มผลหวย - ต้องใส่รหัส */}
             <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("result"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "result" ? "rgba(169,227,75,0.2)" : "rgba(255,255,255,0.06)", color: tab === "add" && addTab === "result" ? "#a9e34b" : "#fff", fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>➕</span>
@@ -404,6 +508,68 @@ export default function App() {
               </button>
               {saveStatus && <div style={{ marginTop: 12, textAlign: "center", fontSize: 13, color: saveStatus.includes("✓") ? "#a9e34b" : saveStatus.includes("⏳") ? "#ffd43b" : "#ff8fa3" }}>{saveStatus}</div>}
             </div>
+          </>
+        )}
+
+        {tab === "stats" && (
+          <>
+            <div style={{ ...glass, padding: 20, marginBottom: 16 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>เลือกหวย</div>
+              <select value={activeStatsName} onChange={e => setStatsName(e.target.value)}
+                style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 16px", color: "#fff", fontSize: 15, fontFamily: "inherit", marginBottom: 16, appearance: "none" }}>
+                {lotteryList.map(l => (
+                  <option key={l.name} value={l.name} style={{ color: "#000" }}>{l.flag} {l.name}</option>
+                ))}
+              </select>
+              <div style={{ display: "flex", padding: 4, gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 14 }}>
+                {[["top","2 ตัวบน"],["bot","2 ตัวล่าง"]].map(([m, label]) => (
+                  <button key={m} onClick={() => setStatsMode(m)} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: statsMode === m ? 700 : 400, background: statsMode === m ? "rgba(255,255,255,0.15)" : "transparent", color: statsMode === m ? "#fff" : "rgba(255,255,255,0.4)" }}>{label}</button>
+                ))}
+              </div>
+            </div>
+
+            {!statsBreakdown ? (
+              <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.25)" }}>
+                <div style={{ fontSize: 48 }}>📭</div>
+                <div style={{ marginTop: 12, fontSize: 14 }}>
+                  ยังไม่มีข้อมูล{statsMode === "top" ? "3 ตัวบน" : "2 ตัวล่าง"}ของหวยนี้
+                </div>
+              </div>
+            ) : (
+              <div style={{ ...glassStrong, padding: "22px 20px", background: `linear-gradient(135deg, ${statsAccent}14, rgba(255,255,255,0.05))`, borderColor: `${statsAccent}40` }}>
+                <div style={{ textAlign: "center", marginBottom: 16 }}>
+                  <div style={{ fontSize: 17, fontWeight: 800 }}>{statsInfo?.flag} {activeStatsName}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>
+                    {statsMode === "top" ? "2 ตัวบน" : "2 ตัวล่าง"} · จากข้อมูล {statsBreakdown.total} งวด
+                  </div>
+                </div>
+
+                <StatRow label="เลข 00 ถึง 49" value={statsBreakdown.half[0]} accent={statsAccent} />
+                <StatRow label="เลข 50 ถึง 99" value={statsBreakdown.half[1]} accent={statsAccent} />
+
+                <Divider />
+
+                <StatRow label="เลข 00 ถึง 33" value={statsBreakdown.thirds[0]} accent={statsAccent} />
+                <StatRow label="เลข 34 ถึง 66" value={statsBreakdown.thirds[1]} accent={statsAccent} />
+                <StatRow label="เลข 67 ถึง 99" value={statsBreakdown.thirds[2]} accent={statsAccent} />
+
+                <Divider />
+
+                <StatRow label="เลข 00 ถึง 24" value={statsBreakdown.quarters[0]} accent={statsAccent} />
+                <StatRow label="เลข 25 ถึง 49" value={statsBreakdown.quarters[1]} accent={statsAccent} />
+                <StatRow label="เลข 50 ถึง 74" value={statsBreakdown.quarters[2]} accent={statsAccent} />
+                <StatRow label="เลข 75 ถึง 99" value={statsBreakdown.quarters[3]} accent={statsAccent} />
+
+                <Divider />
+
+                <StatRow label="เลขลงท้ายเลขคู่" value={statsBreakdown.evenOdd[0]} accent={statsAccent} />
+                <StatRow label="เลขลงท้ายเลขคี่" value={statsBreakdown.evenOdd[1]} accent={statsAccent} />
+
+                <button onClick={copyStatsText} style={{ width: "100%", marginTop: 16, padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg, ${statsAccent}cc, rgba(255,255,255,0.15))` }}>
+                  {statsCopied ? "✓ คัดลอกแล้ว" : "📋 คัดลอกข้อความสรุป"}
+                </button>
+              </div>
+            )}
           </>
         )}
 
