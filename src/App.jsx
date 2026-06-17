@@ -36,8 +36,8 @@ const api = {
 const FLAG_MAP = {
   "🇱🇦": "ลาว", "🇯": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨": "จีน",
   "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหลี", "🇹🇭": "ไทย",
-  "🇸🇬": "สงคโปร์", "🇺": "อเมริกา", "🇬🇧": "องกฤษ", "🇩🇪": "เยอรมัน",
-  "🇷🇺": "รสเซีย", "🇮🇳": "อนเดีย",
+  "🇸🇬": "สิงคโปร์", "🇺": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
+  "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
   "ลาว": "#ff6b6b", "ญี่ปุน": "#ff8fa3", "เวียดนาม": "#ff6b6b",
@@ -346,13 +346,16 @@ export default function App() {
     </>
   );
 
-  if (drillName) {
+    if (drillName) {
     const history = buildHistory(drillName);
     const latest = history[0];
     const accent = COLOR_MAP[drillCountry] || "#74c0fc";
-    const copyLatestResult = () => {
-      if (!latest) return;
-      const text = `${drillFlag} ${drillName} ${drillFlag} : ${latest.top3} - ${latest.bot2}${latest.closed?.length ? `\nเลขปิด ${latest.closed.join(" ")}` : ""}`;
+    const copyHistory = () => {
+      if (history.length === 0) return;
+      const ascending = [...history].reverse();
+      const divider = "➖➖➖➖➖➖➖➖";
+      const lines = ascending.map(h => `${drillFlag} ${h.date} | ${h.top3}-${h.bot2}`);
+      const text = `แนวทางNORTN\n${drillFlag} สถิติย้อนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
       navigator.clipboard.writeText(text).then(() => {
         setDrillCopied(true);
         setTimeout(() => setDrillCopied(false), 1500);
@@ -369,10 +372,11 @@ export default function App() {
             <div style={{ fontSize: 16, fontWeight: 700 }}>{drillFlag} {drillName}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>ผลย้อนหลัง</div>
           </div>
-          <button onClick={copyLatestResult} style={{ ...glass, border: "none", color: accent, fontSize: 13, fontWeight: 600, padding: "8px 14px", cursor: "pointer", background: `${accent}20`, whiteSpace: "nowrap" }}>
+          <button onClick={copyHistory} style={{ ...glass, border: "none", color: accent, fontSize: 13, fontWeight: 600, padding: "8px 14px", cursor: "pointer", background: `${accent}20`, whiteSpace: "nowrap" }}>
             {drillCopied ? "✓ คัดลอก" : "📋 คัดลอก"}
           </button>
         </div>
+
         <div style={{ padding: "20px 16px", position: "relative", zIndex: 1 }}>
           {latest && (
             <div style={{ ...glassStrong, padding: "28px 20px", marginBottom: 20, textAlign: "center", background: `linear-gradient(135deg, ${accent}14, rgba(255,255,255,0.05))`, borderColor: `${accent}40` }}>
