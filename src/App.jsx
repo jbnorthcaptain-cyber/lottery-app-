@@ -34,13 +34,13 @@ const api = {
 };
 
 const FLAG_MAP = {
-  "🇱🇦": "ลาว", "🇯": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨": "จีน",
+  "🇱🇦": "ลาว", "🇯🇵": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨🇳": "จีน",
   "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหลี", "🇹🇭": "ไทย",
-  "🇸🇬": "สงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "องกฤษ", "🇩🇪": "เยอรมัน",
-  "🇷🇺": "รสเซีย", "🇮🇳": "อินเดีย",
+  "🇸🇬": "สิงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
+  "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
-  "ลาว": "#ff6b6b", "ญี่ปุน": "#ff8fa3", "เวียดนาม": "#ff6b6b",
+  "ลาว": "#ff6b6b", "ญี่ปุ่น": "#ff8fa3", "เวียดนาม": "#ff6b6b",
   "จีน": "#ffa94d", "ฮ่องกง": "#ffa94d", "ไต้หวัน": "#74c0fc",
   "เกาหลี": "#a9e34b", "ไทย": "#ff6b6b", "สิงคโปร์": "#ff8fa3",
   "อเมริกา": "#748ffc", "อังกฤษ": "#748ffc", "เยอรมัน": "#dee2e6",
@@ -75,6 +75,7 @@ function parseClosed(text) {
   return map;
 }
 
+// ✨ แก้ไขจุดบั๊ก quarters คำนวณเปอร์เซ็นต์เกิน 100 เรียบร้อยแล้ว
 function buildBreakdown(nums) {
   const total = nums.length;
   if (total === 0) return null;
@@ -85,7 +86,12 @@ function buildBreakdown(nums) {
     total,
     half: [pct(inRange(0, 49)), pct(inRange(50, 99))],
     thirds: [pct(inRange(0, 33)), pct(inRange(34, 66)), pct(inRange(67, 99))],
-    quarters: [pct(inRange(0, 24)), pct(inRange(25, 49)), pct(50, 74), pct(75, 99)],
+    quarters: [
+      pct(inRange(0, 24)), 
+      pct(inRange(25, 49)), 
+      pct(inRange(50, 74)), 
+      pct(inRange(75, 99))
+    ],
     evenOdd: [pct(evenCount), pct(total - evenCount)],
   };
 }
@@ -300,7 +306,6 @@ export default function App() {
     });
   };
 
-  // --- จุดแก้ไขที่ 1: เตรียมตรรกะสำหรับการเลือก วัน / เดือน / ปี ---
   const dates = Object.keys(allData).sort();
   const [curDay, curMonth, curYear] = activeDate ? activeDate.split(" ") : ["", "", ""];
   const THAI_MONTH_ORDER = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -312,7 +317,6 @@ export default function App() {
     if (allData[candidate]) setActiveDate(candidate);
   };
   const current = activeDate ? allData[activeDate] || [] : [];
-  // -----------------------------------------------------------
 
   const grouped = {};
   for (const r of current) {
@@ -606,7 +610,6 @@ export default function App() {
               </div>
             ) : (
               <>
-                {/* --- จุดแก้ไขที่ 2: เปลี่ยนแถวปุ่มเลื่อนเป็น Dropdown 3 ช่อง + ปุ่มดีดงวดล่าสุด --- */}
                 <div style={{ ...glass, padding: 12, marginBottom: 16 }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                     <select value={curDay} onChange={e => selectDateBy(e.target.value, curMonth, curYear)} style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "10px 4px", color: "#fff", fontSize: 14, fontFamily: "inherit", appearance: "none", textAlign: "center" }}>
@@ -623,7 +626,6 @@ export default function App() {
                     📍 ไปงวดล่าสุด
                   </button>
                 </div>
-                {/* --------------------------------------------------------------------------- */}
 
                 {activeDate && (
                   <div style={{ ...glass, display: "flex", justifyContent: "space-around", alignItems: "center", padding: "16px 20px", marginBottom: 16 }}>
