@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1aXhsd2tqemlwbWFueW9lcndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTMzMTksImV4cCI6MjA5NjQyOTMxOX0.PNuqaaiODvZtyPJ6pxvGOX5-LgUEInmp-4bIUxfOQXY";
-const ADMIN_CODE = "Kay";
+const ADMIN_CODE = "1614887";
 
 const api = {
   async getAll() {
@@ -34,13 +34,13 @@ const api = {
 };
 
 const FLAG_MAP = {
-  "🇱🇦": "ลาว", "🇯🇵": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨🇳": "จีน",
+  "🇱🇦": "ลาว", "🇯": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨": "จีน",
   "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหลี", "🇹🇭": "ไทย",
-  "🇸🇬": "สิงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
-  "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
+  "🇸🇬": "สงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "องกฤษ", "🇩🇪": "เยอรมัน",
+  "🇷🇺": "รสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
-  "ลาว": "#ff6b6b", "ญี่ปุ่น": "#ff8fa3", "เวียดนาม": "#ff6b6b",
+  "ลาว": "#ff6b6b", "ญี่ปุน": "#ff8fa3", "เวียดนาม": "#ff6b6b",
   "จีน": "#ffa94d", "ฮ่องกง": "#ffa94d", "ไต้หวัน": "#74c0fc",
   "เกาหลี": "#a9e34b", "ไทย": "#ff6b6b", "สิงคโปร์": "#ff8fa3",
   "อเมริกา": "#748ffc", "อังกฤษ": "#748ffc", "เยอรมัน": "#dee2e6",
@@ -75,7 +75,6 @@ function parseClosed(text) {
   return map;
 }
 
-// ✨ แก้ไขจุดบั๊ก quarters คำนวณเปอร์เซ็นต์เกิน 100 เรียบร้อยแล้ว
 function buildBreakdown(nums) {
   const total = nums.length;
   if (total === 0) return null;
@@ -86,12 +85,7 @@ function buildBreakdown(nums) {
     total,
     half: [pct(inRange(0, 49)), pct(inRange(50, 99))],
     thirds: [pct(inRange(0, 33)), pct(inRange(34, 66)), pct(inRange(67, 99))],
-    quarters: [
-      pct(inRange(0, 24)), 
-      pct(inRange(25, 49)), 
-      pct(inRange(50, 74)), 
-      pct(inRange(75, 99))
-    ],
+    quarters: [pct(inRange(0, 24)), pct(inRange(25, 49)), pct(inRange(50, 74)), pct(inRange(75, 99))],
     evenOdd: [pct(evenCount), pct(total - evenCount)],
   };
 }
@@ -150,10 +144,10 @@ export default function App() {
   const [adminError, setAdminError] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [statsName, setStatsName] = useState("");
-  const [statsMode, setStatsMode] = useState("bot"); 
+  const [statsMode, setStatsMode] = useState("bot"); // 'top' = 2 ตัวบน, 'bot' = 2 ตัวล่าง
   const [statsCopied, setStatsCopied] = useState(false);
   const [drillCopied, setDrillCopied] = useState(false);
-  const [drillOrder, setDrillOrder] = useState("asc"); 
+  const [drillOrder, setDrillOrder] = useState("asc"); // 'asc' = เก่า→ใหม่, 'desc' = ใหม่→เก่า
 
   useEffect(() => {
     (async () => {
@@ -191,7 +185,7 @@ export default function App() {
   const handleAddResult = async () => {
     if (!inputDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
-    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถูกต้องรูปแบบ"); return; }
+    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถกรูปแบบ"); return; }
     const existing = allData[inputDate.trim()] || [];
     const merged = parsed.map(r => {
       const old = existing.find(e => e.name === r.name);
@@ -213,7 +207,7 @@ export default function App() {
     const closedMap = parseClosed(closedText);
     if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลเลขปิด"); return; }
     const existing = allData[inputDate.trim()];
-    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวันนี้"); return; }
+    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวนนี้"); return; }
     const updated = existing.map(r => {
       const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
       return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
@@ -247,6 +241,7 @@ export default function App() {
       }).filter(Boolean).reverse();
   };
 
+  // --- สถิติโอกาสออกเลข ---
   const getLotteryList = () => {
     const map = {};
     for (const date of Object.keys(allData)) {
@@ -317,7 +312,6 @@ export default function App() {
     if (allData[candidate]) setActiveDate(candidate);
   };
   const current = activeDate ? allData[activeDate] || [] : [];
-
   const grouped = {};
   for (const r of current) {
     if (!grouped[r.country]) grouped[r.country] = [];
@@ -334,25 +328,26 @@ export default function App() {
 
   const globalStyles = `*{box-sizing:border-box}input,textarea{outline:none}button{transition:all .15s}button:active{transform:scale(.97);opacity:.8}::-webkit-scrollbar{display:none}::placeholder{color:rgba(255,255,255,.25)}`;
 
+  // Admin Prompt Modal
   const AdminPrompt = () => (
     <>
       <div onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", zIndex: 300 }} />
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 301, ...glassStrong, padding: "32px 28px", width: "85%", maxWidth: 320, textAlign: "center" }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>🔐</div>
         <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Admin เท่านั้น</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>ใส่รหัสเพื่อดำเนินการต่อ</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>ใส่รหัสเพอดำเนินการต่อ</div>
         <input
           type="password"
           value={adminInput}
           autoFocus
           onChange={e => { setAdminInput(e.target.value); setAdminError(false); }}
           onKeyDown={e => e.key === "Enter" && confirmAdmin()}
-          placeholder="รหัสผ่าน"
+          placeholder="รหัสผาน"
           style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: `1px solid ${adminError ? "rgba(255,100,100,0.6)" : "rgba(255,255,255,0.12)"}`, borderRadius: 14, padding: "13px 16px", color: "#fff", fontSize: 18, fontFamily: "inherit", textAlign: "center", letterSpacing: 4, marginBottom: 10 }}
         />
         {adminError && <div style={{ fontSize: 12, color: "#ff8fa3", marginBottom: 10 }}>รหัสไม่ถูกต้อง ❌</div>}
         <button onClick={confirmAdmin} style={{ width: "100%", padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))", marginBottom: 8 }}>
-          ยืนยัน
+          ยนยัน
         </button>
         <button onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ width: "100%", padding: "11px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, color: "rgba(255,255,255,0.4)", background: "transparent" }}>
           ยกเลิก
@@ -421,12 +416,12 @@ export default function App() {
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 10, paddingLeft: 4, letterSpacing: 1.5, textTransform: "uppercase" }}>สถิติย้อนหลัง · {history.length} งวด</div>
           <div style={{ ...glass, overflow: "hidden", padding: 0 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: 1.5, textTransform: "uppercase" }}>
-              <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตัวล่าง</span><span style={{ textAlign: "center" }}>เลขปิด</span>
+              <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตวล่าง</span><span style={{ textAlign: "center" }}>เลขปิด</span>
             </div>
             {history.map((h, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "13px 16px", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : "none", background: i === 0 ? `${accent}0d` : "transparent", alignItems: "center" }}>
                 <span style={{ fontSize: 13, color: i === 0 ? accent : "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", gap: 6 }}>
-                  {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสุด</span>}
+                  {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสด</span>}
                   {h.date}
                 </span>
                 <span style={{ textAlign: "center", fontSize: 20, fontWeight: 800, color: accent, letterSpacing: 2 }}>{h.top3}</span>
@@ -457,24 +452,28 @@ export default function App() {
             <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.25)", margin: "0 auto 20px" }} />
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>เมนู</div>
 
+            {/* ดูผล - ไม่ต้องใส่รหัส */}
             <button onClick={() => { setTab("view"); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "view" ? "rgba(116,143,252,0.2)" : "rgba(255,255,255,0.06)", color: tab === "view" ? "#748ffc" : "#fff", fontFamily: "inherit", fontSize: 16, fontWeight: tab === "view" ? 700 : 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>📋</span>
               <span>ดูผลหวย</span>
               {tab === "view" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#748ffc" }}>● กำลังใช้</span>}
             </button>
 
+            {/* คำนวณสถิติ - ไม่ต้องใส่รหัส */}
             <button onClick={() => { setTab("stats"); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "stats" ? "rgba(255,212,59,0.2)" : "rgba(255,255,255,0.06)", color: tab === "stats" ? "#ffd43b" : "#fff", fontFamily: "inherit", fontSize: 16, fontWeight: tab === "stats" ? 700 : 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>📊</span>
               <span>คำนวณสถิติ</span>
               {tab === "stats" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#ffd43b" }}>● กำลังใช้</span>}
             </button>
 
+            {/* เพิ่มผลหวย - ต้องใส่รหัส */}
             <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("result"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "result" ? "rgba(169,227,75,0.2)" : "rgba(255,255,255,0.06)", color: tab === "add" && addTab === "result" ? "#a9e34b" : "#fff", fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>➕</span>
               <span>เพิ่มผลหวย</span>
               <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>🔐</span>
             </button>
 
+            {/* เพิ่มเลขปิด - ต้องใส่รหัส */}
             <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("closed"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "closed" ? "rgba(255,212,59,0.2)" : "rgba(255,255,255,0.06)", color: tab === "add" && addTab === "closed" ? "#ffd43b" : "#fff", fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 16, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>🔒</span>
               <span>เพิ่มเลขปิด</span>
@@ -485,6 +484,7 @@ export default function App() {
               <>
                 <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 16 }} />
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>จัดการ · {activeDate}</div>
+                {/* ลบ - ต้องใส่รหัส */}
                 <button onClick={() => requireAdmin(() => handleDelete(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.2)", cursor: "pointer", background: "rgba(255,100,100,0.08)", color: "rgba(255,143,163,0.8)", fontFamily: "inherit", fontSize: 14, fontWeight: 500, textAlign: "left" }}>
                   <span style={{ fontSize: 16 }}>🗑</span>
                   <span>ลบข้อมูลวันที่ {activeDate}</span>
