@@ -192,7 +192,7 @@ export default function App() {
     },
     light: {
       bg: "linear-gradient(135deg, #f6f5fb 0%, #ffffff 45%, #f3f6fb 100%)",
-      text: "#1a1a2e",
+      text: "#000000",
       teal: "#0f9488",
       gold: "#b8860b",
       blob1: "#748ffc0c",
@@ -200,7 +200,7 @@ export default function App() {
     },
   };
   const t = THEME_COLORS[themeMode];
-  const ink = (opacity) => themeMode === "light" ? `rgba(26,26,46,${opacity})` : `rgba(255,255,255,${opacity})`;
+  const ink = (opacity) => themeMode === "light" ? `rgba(0,0,0,${opacity})` : `rgba(255,255,255,${opacity})`;
 
   const glass = {
     background: ink(0.08),
