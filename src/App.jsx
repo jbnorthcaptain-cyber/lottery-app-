@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1aXhsd2tqemlwbWFueW9lcndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTMzMTksImV4cCI6MjA5NjQyOTMxOX0.PNuqaaiODvZtyPJ6pxvGOX5-LgUEInmp-4bIUxfOQXY";
-const ADMIN_CODE = "Kay";
+const ADMIN_CODE = "1614887";
 
 const api = {
   async getAll() {
@@ -201,6 +201,8 @@ export default function App() {
   };
   const t = THEME_COLORS[themeMode];
   const ink = (opacity) => themeMode === "light" ? `rgba(0,0,0,${opacity})` : `rgba(255,255,255,${opacity})`;
+  // ใช้กับสีตัวอักษรโดยเฉพาะ (โหมดสว่าง = เข้มขึ้นกว่า ink ปกติ, โหมดมืด = เหมือนเดิมทุกประการ)
+  const inkText = (opacity) => themeMode === "light" ? `rgba(0,0,0,${(0.4 + 0.6 * opacity).toFixed(2)})` : ink(opacity);
 
   const glass = {
     background: ink(0.08),
@@ -387,14 +389,19 @@ export default function App() {
   }
   const hasClosed = current.some(r => r.closed?.length > 0);
 
+  const FONT_STACKS = {
+    light: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Sarabun', 'Helvetica Neue', Arial, sans-serif",
+    dark: "'SF Pro Display', 'Sarabun', sans-serif",
+  };
+
   const baseStyle = {
     minHeight: "100vh",
     background: t.bg,
-    fontFamily: "'SF Pro Display', 'Sarabun', sans-serif",
+    fontFamily: FONT_STACKS[themeMode],
     color: t.text, paddingBottom: 50,
   };
 
-  const globalStyles = `*{box-sizing:border-box}input,textarea{outline:none}button{transition:all .15s}button:active{transform:scale(.97);opacity:.8}::-webkit-scrollbar{display:none}::placeholder{color:${ink(.25)}}`;
+  const globalStyles = `*{box-sizing:border-box}input,textarea{outline:none}button{transition:all .15s}button:active{transform:scale(.97);opacity:.8}::-webkit-scrollbar{display:none}::placeholder{color:${inkText(.25)}}`;
 
   // Admin Prompt Modal
   const AdminPrompt = () => (
@@ -403,7 +410,7 @@ export default function App() {
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 301, ...glassStrong, padding: "32px 28px", width: "85%", maxWidth: 320, textAlign: "center" }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>🔐</div>
         <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Admin เท่านั้น</div>
-        <div style={{ fontSize: 12, color: ink(0.4), marginBottom: 24 }}>ใส่รหัสเพอดำเนินการต่อ</div>
+        <div style={{ fontSize: 12, color: inkText(0.4), marginBottom: 24 }}>ใส่รหัสเพอดำเนินการต่อ</div>
         <input
           type="password"
           value={adminInput}
@@ -417,7 +424,7 @@ export default function App() {
         <button onClick={confirmAdmin} style={{ width: "100%", padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))", marginBottom: 8 }}>
           ยนยัน
         </button>
-        <button onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ width: "100%", padding: "11px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, color: ink(0.4), background: "transparent" }}>
+        <button onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ width: "100%", padding: "11px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, color: inkText(0.4), background: "transparent" }}>
           ยกเลิก
         </button>
       </div>
@@ -448,7 +455,7 @@ export default function App() {
           <button onClick={() => setDrillName(null)} style={{ ...glass, border: "none", color: accent, fontSize: 15, fontWeight: 600, padding: "8px 16px", cursor: "pointer", background: `${accent}20` }}>‹ กลับ</button>
           <div style={{ flex: 1, textAlign: "center" }}>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{drillFlag} {drillName}</div>
-            <div style={{ fontSize: 11, color: ink(0.4), marginTop: 2 }}>ผลย้อนหลัง</div>
+            <div style={{ fontSize: 11, color: inkText(0.4), marginTop: 2 }}>ผลย้อนหลัง</div>
           </div>
           <button onClick={() => setDrillOrder(o => o === "asc" ? "desc" : "asc")} style={{ ...glass, border: "none", color: accent, fontSize: 11, fontWeight: 600, padding: "8px 10px", cursor: "pointer", background: `${accent}20`, whiteSpace: "nowrap" }}>
             {drillOrder === "asc" ? "เก่า→ใหม่" : "ใหม่→เก่า"}
@@ -460,35 +467,35 @@ export default function App() {
         <div style={{ padding: "20px 16px", position: "relative", zIndex: 1 }}>
           {latest && (
             <div style={{ ...glassStrong, padding: "28px 20px", marginBottom: 20, textAlign: "center", background: `linear-gradient(135deg, ${accent}14, rgba(255,255,255,0.05))`, borderColor: `${accent}40` }}>
-              <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>งวดวันที่</div>
+              <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>งวดวันที่</div>
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 20 }}>{latest.date}</div>
               <div style={{ fontSize: 52, fontWeight: 800, letterSpacing: 10, marginBottom: 20, textShadow: `0 0 40px ${accent}66` }}>{latest.top3}{latest.bot2}</div>
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <div style={{ flex: 1, borderRight: `1px solid ${ink(0.08)}` }}>
-                  <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1, marginBottom: 6 }}>3 ตัวบน</div>
+                  <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1, marginBottom: 6 }}>3 ตัวบน</div>
                   <div style={{ fontSize: 32, fontWeight: 800, color: accent }}>{latest.top3}</div>
                 </div>
                 <div style={{ flex: 1, borderRight: latest.closed?.length > 0 ? `1px solid ${ink(0.08)}` : "none" }}>
-                  <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1, marginBottom: 6 }}>2 ตัวล่าง</div>
+                  <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1, marginBottom: 6 }}>2 ตัวล่าง</div>
                   <div style={{ fontSize: 32, fontWeight: 800, color: t.teal }}>{latest.bot2}</div>
                 </div>
                 {latest.closed?.length > 0 && (
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1, marginBottom: 6 }}>เลขปิด</div>
+                    <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1, marginBottom: 6 }}>เลขปิด</div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: t.gold }}>{latest.closed.join(" ")}</div>
                   </div>
                 )}
               </div>
             </div>
           )}
-          <div style={{ fontSize: 10, color: ink(0.35), marginBottom: 10, paddingLeft: 4, letterSpacing: 1.5, textTransform: "uppercase" }}>สถิติย้อนหลัง · {history.length} งวด</div>
+          <div style={{ fontSize: 10, color: inkText(0.35), marginBottom: 10, paddingLeft: 4, letterSpacing: 1.5, textTransform: "uppercase" }}>สถิติย้อนหลัง · {history.length} งวด</div>
           <div style={{ ...glass, overflow: "hidden", padding: 0 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "12px 16px", borderBottom: `1px solid ${ink(0.07)}`, fontSize: 10, color: ink(0.35), letterSpacing: 1.5, textTransform: "uppercase" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "12px 16px", borderBottom: `1px solid ${ink(0.07)}`, fontSize: 10, color: inkText(0.35), letterSpacing: 1.5, textTransform: "uppercase" }}>
               <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตวล่าง</span><span style={{ textAlign: "center" }}>เลขปิด</span>
             </div>
             {history.map((h, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "13px 16px", borderTop: i > 0 ? `1px solid ${ink(0.05)}` : "none", background: i === 0 ? `${accent}0d` : "transparent", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: i === 0 ? accent : ink(0.55), display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, color: i === 0 ? accent : inkText(0.55), display: "flex", alignItems: "center", gap: 6 }}>
                   {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสด</span>}
                   {h.date}
                 </span>
@@ -518,7 +525,7 @@ export default function App() {
           <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200 }} />
           <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 201, ...glassStrong, borderRadius: "28px 28px 0 0", padding: "12px 20px 44px" }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, background: ink(0.25), margin: "0 auto 20px" }} />
-            <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>เมนู</div>
+            <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>เมนู</div>
 
             {/* ดูผล - ไม่ต้องใส่รหัส */}
             <button onClick={() => { setTab("view"); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "view" ? "rgba(116,143,252,0.2)" : ink(0.06), color: tab === "view" ? "#748ffc" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: tab === "view" ? 700 : 500, marginBottom: 8, textAlign: "left" }}>
@@ -538,219 +545,8 @@ export default function App() {
             <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("result"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "result" ? "rgba(169,227,75,0.2)" : ink(0.06), color: tab === "add" && addTab === "result" ? "#a9e34b" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>➕</span>
               <span>เพิ่มผลหวย</span>
-              <span style={{ marginLeft: "auto", fontSize: 11, color: ink(0.3) }}>🔐</span>
+              <span style={{ marginLeft: "auto", fontSize: 11, color: inkText(0.3) }}>🔐</span>
             </button>
 
             {/* เพิ่มเลขปิด - ต้องใส่รหัส */}
-            <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("closed"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "closed" ? "rgba(255,212,59,0.2)" : ink(0.06), color: tab === "add" && addTab === "closed" ? "#ffd43b" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 16, textAlign: "left" }}>
-              <span style={{ fontSize: 20 }}>🔒</span>
-              <span>เพิ่มเลขปิด</span>
-              <span style={{ marginLeft: "auto", fontSize: 11, color: ink(0.3) }}>🔐</span>
-            </button>
-
-            {activeDate && (
-              <>
-                <div style={{ height: 1, background: ink(0.1), marginBottom: 16 }} />
-                <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>จัดการ · {activeDate}</div>
-                {/* ลบ - ต้องใส่รหัส */}
-                <button onClick={() => requireAdmin(() => handleDelete(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.2)", cursor: "pointer", background: "rgba(255,100,100,0.08)", color: "rgba(255,143,163,0.8)", fontFamily: "inherit", fontSize: 14, fontWeight: 500, textAlign: "left" }}>
-                  <span style={{ fontSize: 16 }}>🗑</span>
-                  <span>ลบข้อมูลวันที่ {activeDate}</span>
-                  <span style={{ marginLeft: "auto", fontSize: 11, color: ink(0.3) }}>🔐</span>
-                </button>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Header */}
-      <div style={{ ...glassStrong, borderRadius: "0 0 32px 32px", padding: "54px 20px 18px", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <ThemeToggle mode={themeMode} onToggle={() => setThemeMode(m => m === "light" ? "dark" : "light")} />
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>สรุปผล</div>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>🎯 หวยประจำวัน</div>
-          <div style={{ fontSize: 11, color: ink(0.4), marginTop: 3 }}>
-            {loaded ? `${dates.length} วัน · ${Object.values(allData).flat().length} รายการ` : "⏳ กำลังโหลด..."}
-          </div>
-        </div>
-        <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer", background: ink(0.1), backdropFilter: "blur(10px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5 }}>
-          {[0,1,2].map(i => <div key={i} style={{ width: 18, height: 2, borderRadius: 1, background: t.text, opacity: i === 1 ? 0.6 : 1 }} />)}
-        </button>
-      </div>
-
-      <div style={{ padding: "16px", position: "relative", zIndex: 1 }}>
-        {tab === "add" && (
-          <>
-            <div style={{ ...glass, display: "flex", padding: 4, gap: 4, marginBottom: 16 }}>
-              {[["result","🎰 ผลหวย"],["closed","🔒 เลขปิด"]].map(([tabKey, label]) => (
-                <button key={tabKey} onClick={() => setAddTab(tabKey)} style={{ flex: 1, padding: "10px 0", borderRadius: 14, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: addTab === tabKey ? 700 : 400, background: addTab === tabKey ? ink(0.15) : "transparent", color: addTab === tabKey ? t.text : ink(0.4) }}>{label}</button>
-              ))}
-            </div>
-            <div style={{ ...glassStrong, padding: 20 }}>
-              <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>วันที่</div>
-              <input value={inputDate} onChange={e => setInputDate(e.target.value)} placeholder="03 มิ.ย. 69"
-                style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 15, fontFamily: "inherit", marginBottom: 16 }} />
-              <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>
-                {addTab === "result" ? "วางข้อมูลผลหวย" : "วางข้อมูลเลขปิด"}
-              </div>
-              <textarea value={addTab === "result" ? inputText : closedText}
-                onChange={e => addTab === "result" ? setInputText(e.target.value) : setClosedText(e.target.value)}
-                placeholder={addTab === "result" ? "🇱 ลาวประตูชัย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
-                rows={10} style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: 16 }} />
-              <button onClick={addTab === "result" ? handleAddResult : handleAddClosed} style={{ width: "100%", padding: "15px", borderRadius: 18, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: addTab === "result" ? "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" : "linear-gradient(135deg, rgba(138,43,226,0.8), rgba(116,143,252,0.6))", backdropFilter: "blur(10px)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
-                {addTab === "result" ? "💾 บันทึกผลหวย" : "🔒 บันทึกเลขปิด"}
-              </button>
-              {saveStatus && <div style={{ marginTop: 12, textAlign: "center", fontSize: 13, color: saveStatus.includes("✓") ? "#a9e34b" : saveStatus.includes("⏳") ? "#ffd43b" : "#ff8fa3" }}>{saveStatus}</div>}
-            </div>
-          </>
-        )}
-
-        {tab === "stats" && (
-          <>
-            <div style={{ ...glass, padding: 20, marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>เลือกหวย</div>
-              <select value={activeStatsName} onChange={e => setStatsName(e.target.value)}
-                style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 15, fontFamily: "inherit", marginBottom: 16, appearance: "none" }}>
-                {lotteryList.map(l => (
-                  <option key={l.name} value={l.name} style={{ color: "#000" }}>{l.flag} {l.name}</option>
-                ))}
-              </select>
-              <div style={{ display: "flex", padding: 4, gap: 4, background: ink(0.05), borderRadius: 14 }}>
-                {[["top","2 ตัวบน"],["bot","2 ตัวล่าง"]].map(([m, label]) => (
-                  <button key={m} onClick={() => setStatsMode(m)} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: statsMode === m ? 700 : 400, background: statsMode === m ? ink(0.15) : "transparent", color: statsMode === m ? t.text : ink(0.4) }}>{label}</button>
-                ))}
-              </div>
-            </div>
-
-            {!statsBreakdown ? (
-              <div style={{ textAlign: "center", padding: "60px 20px", color: ink(0.25) }}>
-                <div style={{ fontSize: 48 }}>📭</div>
-                <div style={{ marginTop: 12, fontSize: 14 }}>
-                  ยังไม่มีข้อมูล{statsMode === "top" ? "3 ตัวบน" : "2 ตัวล่าง"}ของหวยนี้
-                </div>
-              </div>
-            ) : (
-              <div style={{ ...glassStrong, padding: "22px 20px", background: `linear-gradient(135deg, ${statsAccent}14, rgba(255,255,255,0.05))`, borderColor: `${statsAccent}40` }}>
-                <div style={{ textAlign: "center", marginBottom: 16 }}>
-                  <div style={{ fontSize: 17, fontWeight: 800 }}>{statsInfo?.flag} {activeStatsName}</div>
-                  <div style={{ fontSize: 11, color: ink(0.4), marginTop: 4 }}>
-                    {statsMode === "top" ? "2 ตัวบน" : "2 ตัวล่าง"} · จากข้อมูล {statsBreakdown.total} งวด
-                  </div>
-                </div>
-
-                <StatRow label="เลข 00 ถึง 49" value={statsBreakdown.half[0]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลข 50 ถึง 99" value={statsBreakdown.half[1]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-
-                <Divider color={ink(0.08)} />
-
-                <StatRow label="เลข 00 ถึง 33" value={statsBreakdown.thirds[0]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลข 34 ถึง 66" value={statsBreakdown.thirds[1]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลข 67 ถึง 99" value={statsBreakdown.thirds[2]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-
-                <Divider color={ink(0.08)} />
-
-                <StatRow label="เลข 00 ถึง 24" value={statsBreakdown.quarters[0]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลข 25 ถึง 49" value={statsBreakdown.quarters[1]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลข 50 ถึง 74" value={statsBreakdown.quarters[2]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลข 75 ถึง 99" value={statsBreakdown.quarters[3]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-
-                <Divider color={ink(0.08)} />
-
-                <StatRow label="เลขลงท้ายเลขคู่" value={statsBreakdown.evenOdd[0]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลขลงท้ายเลขคี่" value={statsBreakdown.evenOdd[1]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
-
-                <button onClick={copyStatsText} style={{ width: "100%", marginTop: 16, padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg, ${statsAccent}cc, rgba(255,255,255,0.15))` }}>
-                  {statsCopied ? "✓ คัดลอกแล้ว" : "📋 คัดลอกข้อความสรุป"}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {tab === "view" && (
-          <>
-            {dates.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "80px 20px", color: ink(0.25) }}>
-                <div style={{ fontSize: 56 }}>{loaded ? "📭" : "⏳"}</div>
-                <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
-                {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มุมขวาบนเพื่อเพิ่มข้อมูล</div>}
-              </div>
-            ) : (
-              <>
-                <div style={{ ...glass, padding: 12, marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                    <select value={curDay} onChange={e => selectDateBy(e.target.value, curMonth, curYear)} style={{ flex: 1, background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 12, padding: "10px 4px", color: t.text, fontSize: 14, fontFamily: "inherit", appearance: "none", textAlign: "center" }}>
-                      {dayOptions.map(d => <option key={d} value={d} style={{ color: "#000" }}>{d}</option>)}
-                    </select>
-                    <select value={curMonth} onChange={e => selectDateBy(curDay, e.target.value, curYear)} style={{ flex: 1, background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 12, padding: "10px 4px", color: t.text, fontSize: 14, fontFamily: "inherit", appearance: "none", textAlign: "center" }}>
-                      {monthOptions.map(m => <option key={m} value={m} style={{ color: "#000" }}>{m}</option>)}
-                    </select>
-                    <select value={curYear} onChange={e => selectDateBy(curDay, curMonth, e.target.value)} style={{ flex: 1, background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 12, padding: "10px 4px", color: t.text, fontSize: 14, fontFamily: "inherit", appearance: "none", textAlign: "center" }}>
-                      {yearOptions.map(y => <option key={y} value={y} style={{ color: "#000" }}>{y}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={() => dates.length > 0 && setActiveDate(dates[dates.length - 1])} style={{ width: "100%", padding: "10px", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" }}>
-                    📍 ไปงวดล่าสุด
-                  </button>
-                </div>
-
-                {activeDate && (
-                  <div style={{ ...glass, display: "flex", justifyContent: "space-around", alignItems: "center", padding: "16px 20px", marginBottom: 16 }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: "#748ffc" }}>{current.length}</div>
-                      <div style={{ fontSize: 10, color: ink(0.35), letterSpacing: 1, textTransform: "uppercase" }}>รายการ</div>
-                    </div>
-                    <div style={{ width: 1, height: 32, background: ink(0.1) }} />
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: "#a9e34b" }}>{Object.keys(grouped).length}</div>
-                      <div style={{ fontSize: 10, color: ink(0.35), letterSpacing: 1, textTransform: "uppercase" }}>ประเทศ</div>
-                    </div>
-                    <div style={{ width: 1, height: 32, background: ink(0.1) }} />
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>{activeDate}</div>
-                      <div style={{ fontSize: 10, color: ink(0.35), letterSpacing: 1, textTransform: "uppercase" }}>วันที่</div>
-                    </div>
-                  </div>
-                )}
-
-                {Object.entries(grouped).map(([country, rows]) => {
-                  const accent = COLOR_MAP[country] || "#74c0fc";
-                  return (
-                    <div key={country} style={{ marginBottom: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, paddingLeft: 4 }}>
-                        <div style={{ width: 3, height: 16, borderRadius: 2, background: accent }} />
-                        <span style={{ fontSize: 13, fontWeight: 700, color: accent }}>{rows[0]?.flag} {country}</span>
-                        <span style={{ fontSize: 11, color: ink(0.3), marginLeft: "auto" }}>{rows.length} รายการ</span>
-                      </div>
-                      <div style={{ ...glass, overflow: "hidden", padding: 0 }}>
-                        <div style={{ display: "grid", gridTemplateColumns: hasClosed ? "1fr 70px 60px 76px" : "1fr 80px 70px", padding: "10px 16px", borderBottom: `1px solid ${ink(0.06)}`, fontSize: 10, color: ink(0.3), letterSpacing: 1.5, textTransform: "uppercase" }}>
-                          <span>ชื่อหวย</span>
-                          <span style={{ textAlign: "center" }}>3 ตัวบน</span>
-                          <span style={{ textAlign: "center" }}>2 ตัวล่าง</span>
-                          {hasClosed && <span style={{ textAlign: "center" }}>เลขปิด</span>}
-                        </div>
-                        {rows.map((r, i) => (
-                          <div key={i} onClick={() => { setDrillName(r.name); setDrillFlag(r.flag); setDrillCountry(r.country); }}
-                            style={{ display: "grid", gridTemplateColumns: hasClosed ? "1fr 70px 60px 76px" : "1fr 80px 70px", padding: "13px 16px", borderTop: i > 0 ? `1px solid ${ink(0.05)}` : "none", alignItems: "center", cursor: "pointer" }}
-                            onTouchStart={e => e.currentTarget.style.background = ink(0.05)}
-                            onTouchEnd={e => e.currentTarget.style.background = "transparent"}
-                          >
-                            <span style={{ fontSize: 13, color: ink(0.8), fontWeight: 500 }}>{r.name} <span style={{ color: ink(0.2) }}>›</span></span>
-                            <span style={{ textAlign: "center", fontSize: 18, fontWeight: 800, color: accent, letterSpacing: 2 }}>{r.top3}</span>
-                            <span style={{ textAlign: "center", fontSize: 16, fontWeight: 700, color: t.teal }}>{r.bot2}</span>
-                            {hasClosed && <span style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: r.closed?.length ? t.gold : ink(0.15) }}>{r.closed?.join(" ") || "—"}</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+            <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("closed"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border
