@@ -34,10 +34,10 @@ const api = {
 };
 
 const FLAG_MAP = {
-  "🇱": "ลาว", "🇯": "ญี่ปน", "🇻🇳": "เวียดนาม", "🇨": "จีน",
-  "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหล", "🇹🇭": "ไทย",
-  "🇸🇬": "สิงคโปร์", "🇺🇸": "อเมริกา", "🇬": "อังกฤษ", "🇩🇪": "เยอรมัน",
-  "🇷🇺": "รสเซีย", "🇮🇳": "อินเดีย",
+  "🇱🇦": "ลาว", "🇯": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨": "จีน",
+  "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหลี", "🇹🇭": "ไทย",
+  "🇸🇬": "สิงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
+  "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
   "ลาว": "#ff6b6b", "ญี่ปุ่น": "#ff8fa3", "เวียดนาม": "#ff6b6b",
@@ -54,7 +54,7 @@ function parseResults(text) {
     const m = line.match(/^([\u{1F1E0}-\u{1F1FF}]{2})\s+(.+?)\s+[\u{1F1E0}-\u{1F1FF}]{2}\s*:\s*(\d{3})\s*[-–]\s*(\d{2})$/u);
     if (m) {
       const flag = m[1];
-      const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อืนๆ";
+      const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อื่นๆ";
       results.push({ flag, country, name: m[2].trim(), top3: m[3], bot2: m[4], closed: [] });
     }
   }
@@ -183,12 +183,12 @@ export default function App() {
 
   const THEME_COLORS = {
     dark: {
-      bg: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 40%, #0a1a2e 100%)",
-      text: "#ffffff",
-      teal: "#c3fae8",
-      gold: "#ffd43b",
-      blob1: "#748ffc14",
-      blob2: "#ff6b6b0e",
+      bg: "#ffffff",
+      text: "#000000",
+      teal: "#0f9488",
+      gold: "#b8860b",
+      blob1: "transparent",
+      blob2: "transparent",
     },
     light: {
       bg: "linear-gradient(135deg, #f6f5fb 0%, #ffffff 45%, #f3f6fb 100%)",
@@ -200,9 +200,9 @@ export default function App() {
     },
   };
   const t = THEME_COLORS[themeMode];
-  const ink = (opacity) => themeMode === "light" ? `rgba(0,0,0,${opacity})` : `rgba(255,255,255,${opacity})`;
-  // ใช้กับสีตัวอักษรโดยเฉพาะ (โหมดสว่าง = เข้มขึ้นกว่า ink ปกติ, โหมดมืด = เหมือนเดิมทุกประการ)
-  const inkText = (opacity) => themeMode === "light" ? `rgba(0,0,0,${(0.65 + 0.35 * opacity).toFixed(2)})` : ink(opacity);
+  const ink = (opacity) => `rgba(0,0,0,${opacity})`;
+  // ใช้กับสีตัวอักษรโดยเฉพาะ — ทั้งสองโหมดพื้นขาว ตัวอักษรจึงเป็นสีดำเสมอ (โหมดสว่างเข้มขึ้นกว่า ink ปกติ)
+  const inkText = (opacity) => `rgba(0,0,0,${(0.65 + 0.35 * opacity).toFixed(2)})`;
 
   const glass = {
     background: ink(0.08),
@@ -255,13 +255,13 @@ export default function App() {
   const handleAddResult = async () => {
     if (!inputDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
-    if (parsed.length === 0) { setSaveStatus("⚠ ไม่พบข้อมูลที่ถกรปแบบ"); return; }
+    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถกรูปแบบ"); return; }
     const existing = allData[inputDate.trim()] || [];
     const merged = parsed.map(r => {
       const old = existing.find(e => e.name === r.name);
       return { ...r, closed: old?.closed || [] };
     });
-    setSaveStatus("⏳ กลังบันทึก...");
+    setSaveStatus("⏳ กำลังบันทึก...");
     try {
       await api.upsert(inputDate.trim(), merged);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: merged }));
@@ -286,14 +286,14 @@ export default function App() {
     try {
       await api.patch(inputDate.trim(), updated);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
-      setSaveStatus("✓ บันทึกเลขปดแล้ว");
+      setSaveStatus("✓ บันทึกเลขปิดแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setClosedText(""); setTab("view");
     } catch (e) { setSaveStatus("⚠️ บันทึกไม่ได้"); }
   };
 
   const handleDelete = async (date) => {
-    if (!window.confirm(`ยนยันลบข้อมูลวันที่ ${date} ?`)) return;
+    if (!window.confirm(`ยืนยันลบข้อมูลวันที่ ${date} ?`)) return;
     await api.remove(date);
     const newData = { ...allData };
     delete newData[date];
@@ -373,7 +373,7 @@ export default function App() {
 
   const dates = Object.keys(allData).sort();
   const [curDay, curMonth, curYear] = activeDate ? activeDate.split(" ") : ["", "", ""];
-  const THAI_MONTH_ORDER = ["ม.ค.","ก.พ.","ม.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  const THAI_MONTH_ORDER = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   const dayOptions = Array.from(new Set(dates.map(d => d.split(" ")[0]))).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
   const monthOptions = THAI_MONTH_ORDER.filter(m => dates.some(d => d.split(" ")[1] === m));
   const yearOptions = Array.from(new Set(dates.map(d => d.split(" ")[2]))).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
@@ -391,7 +391,7 @@ export default function App() {
 
   const FONT_STACKS = {
     light: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Sarabun', 'Helvetica Neue', Arial, sans-serif",
-    dark: "'SF Pro Display', 'Sarabun', sans-serif",
+    dark: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Sarabun', 'Helvetica Neue', Arial, sans-serif",
   };
 
   const baseStyle = {
@@ -439,7 +439,7 @@ export default function App() {
           ยนยัน
         </button>
         <button onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ width: "100%", padding: "11px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, color: inkText(0.4), background: "transparent" }}>
-          ยกเลก
+          ยกเลิก
         </button>
       </div>
     </>
@@ -454,7 +454,7 @@ export default function App() {
       const ordered = drillOrder === "asc" ? [...history].reverse() : history;
       const divider = "➖➖➖➖➖➖➖➖";
       const lines = ordered.map(h => `${drillFlag} ${h.date} | ${h.top3}-${h.bot2}`);
-      const text = `แนวทางNORTN\n${drillFlag} สถิติยอนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
+      const text = `แนวทางNORTN\n${drillFlag} สถิติย้อนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
       navigator.clipboard.writeText(text).then(() => {
         setDrillCopied(true);
         setTimeout(() => setDrillCopied(false), 1500);
@@ -473,7 +473,7 @@ export default function App() {
             <div style={{ fontSize: 11, color: inkText(0.4), marginTop: 2 }}>ผลย้อนหลัง</div>
           </div>
           <button onClick={() => setDrillOrder(o => o === "asc" ? "desc" : "asc")} style={{ ...glass, border: "none", color: accent, fontSize: 11, fontWeight: 600, padding: "8px 10px", cursor: "pointer", background: `${accent}20`, whiteSpace: "nowrap" }}>
-            {drillOrder === "asc" ? "เกา→ใหม่" : "ใหม่→เก่า"}
+            {drillOrder === "asc" ? "เก่า→ใหม่" : "ใหม่→เก่า"}
           </button>
           <button onClick={copyHistory} style={{ ...glass, border: "none", color: accent, fontSize: 13, fontWeight: 600, padding: "8px 14px", cursor: "pointer", background: `${accent}20`, whiteSpace: "nowrap" }}>
             {drillCopied ? "✓ คัดลอก" : "📋 คัดลอก"}
@@ -619,7 +619,7 @@ export default function App() {
               </div>
               <textarea value={addTab === "result" ? inputText : closedText}
                 onChange={e => addTab === "result" ? setInputText(e.target.value) : setClosedText(e.target.value)}
-                placeholder={addTab === "result" ? "🇱 ลาวประตูชย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
+                placeholder={addTab === "result" ? "🇱 ลาวประตูชัย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
                 rows={10} style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: 16 }} />
               <button onClick={addTab === "result" ? handleAddResult : handleAddClosed} style={{ width: "100%", padding: "15px", borderRadius: 18, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: addTab === "result" ? "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" : "linear-gradient(135deg, rgba(138,43,226,0.8), rgba(116,143,252,0.6))", backdropFilter: "blur(10px)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
                 {addTab === "result" ? "💾 บันทึกผลหวย" : "🔒 บันทึกเลขปิด"}
@@ -650,7 +650,7 @@ export default function App() {
               <div style={{ textAlign: "center", padding: "60px 20px", color: inkText(0.25) }}>
                 <div style={{ fontSize: 48 }}>📭</div>
                 <div style={{ marginTop: 12, fontSize: 14 }}>
-                  ยังไม่มีขอมูล{statsMode === "top" ? "3 ตัวบน" : "2 ตัวล่าง"}ของหวยน
+                  ยังไม่มีข้อมูล{statsMode === "top" ? "3 ตัวบน" : "2 ตัวล่าง"}ของหวยนี้
                 </div>
               </div>
             ) : (
@@ -681,7 +681,7 @@ export default function App() {
                 <Divider color={ink(0.08)} />
 
                 <StatRow label="เลขลงท้ายเลขคู่" value={statsBreakdown.evenOdd[0]} accent={statsAccent} labelColor={inkText(0.55)} trackColor={ink(0.07)} />
-                <StatRow label="เลขลงท้ายเลขคี" value={statsBreakdown.evenOdd[1]} accent={statsAccent} labelColor={inkText(0.55)} trackColor={ink(0.07)} />
+                <StatRow label="เลขลงท้ายเลขคี่" value={statsBreakdown.evenOdd[1]} accent={statsAccent} labelColor={inkText(0.55)} trackColor={ink(0.07)} />
 
                 <button onClick={copyStatsText} style={{ width: "100%", marginTop: 16, padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg, ${statsAccent}cc, rgba(255,255,255,0.15))` }}>
                   {statsCopied ? "✓ คัดลอกแล้ว" : "📋 คัดลอกข้อความสรุป"}
@@ -696,7 +696,7 @@ export default function App() {
             {dates.length === 0 ? (
               <div style={{ textAlign: "center", padding: "80px 20px", color: inkText(0.25) }}>
                 <div style={{ fontSize: 56 }}>{loaded ? "📭" : "⏳"}</div>
-                <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมล" : "กำลังโหลด..."}</div>
+                <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
                 {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มุมขวาบนเพื่อเพิ่มข้อมูล</div>}
               </div>
             ) : (
