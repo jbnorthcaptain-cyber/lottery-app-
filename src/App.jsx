@@ -34,14 +34,14 @@ const api = {
 };
 
 const FLAG_MAP = {
-  "🇱🇦": "ลาว", "🇯🇵": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨🇳": "จีน",
+  "🇱🇦": "ลาว", "🇯": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨": "จีน",
   "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหลี", "🇹🇭": "ไทย",
-  "🇸🇬": "สิงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
+  "🇸🇬": "สิงคโปร", "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
   "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
   "ลาว": "#ff6b6b", "ญี่ปุ่น": "#ff8fa3", "เวียดนาม": "#ff6b6b",
-  "จีน": "#ffa94d", "ฮ่องกง": "#ffa94d", "ไต้หวัน": "#74c0fc",
+  "จีน": "#ffa94d", "ฮ่องกง": "#ffa94d", "ไตหวัน": "#74c0fc",
   "เกาหลี": "#a9e34b", "ไทย": "#ff6b6b", "สิงคโปร์": "#ff8fa3",
   "อเมริกา": "#748ffc", "อังกฤษ": "#748ffc", "เยอรมัน": "#dee2e6",
   "รัสเซีย": "#74c0fc", "อินเดีย": "#ffa94d",
@@ -54,7 +54,7 @@ function parseResults(text) {
     const m = line.match(/^([\u{1F1E0}-\u{1F1FF}]{2})\s+(.+?)\s+[\u{1F1E0}-\u{1F1FF}]{2}\s*:\s*(\d{3})\s*[-–]\s*(\d{2})$/u);
     if (m) {
       const flag = m[1];
-      const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อื่นๆ";
+      const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อนๆ";
       results.push({ flag, country, name: m[2].trim(), top3: m[3], bot2: m[4], closed: [] });
     }
   }
@@ -183,7 +183,7 @@ export default function App() {
 
   const THEME_COLORS = {
     dark: {
-      bg: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 40%, #0a1a2e 100%)",
+      bg: "#000000",
       text: "#ffffff",
       teal: "#c3fae8",
       gold: "#ffd43b",
@@ -191,7 +191,7 @@ export default function App() {
       blob2: "#ff6b6b0e",
     },
     light: {
-      bg: "linear-gradient(135deg, #f6f5fb 0%, #ffffff 45%, #f3f6fb 100%)",
+      bg: "#ffffff",
       text: "#000000",
       teal: "#0f9488",
       gold: "#b8860b",
@@ -253,7 +253,7 @@ export default function App() {
   const handleAddResult = async () => {
     if (!inputDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
-    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถูกต้องรูปแบบ"); return; }
+    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถกรูปแบบ"); return; }
     const existing = allData[inputDate.trim()] || [];
     const merged = parsed.map(r => {
       const old = existing.find(e => e.name === r.name);
@@ -275,7 +275,7 @@ export default function App() {
     const closedMap = parseClosed(closedText);
     if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลเลขปิด"); return; }
     const existing = allData[inputDate.trim()];
-    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวันนี้"); return; }
+    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวนนี้"); return; }
     const updated = existing.map(r => {
       const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
       return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
@@ -362,7 +362,7 @@ export default function App() {
 เลขลงท้ายเลขคู่ โอกาสออก ${statsBreakdown.evenOdd[0]}%
 เลขลงท้ายเลขคี่ โอกาสออก ${statsBreakdown.evenOdd[1]}%
 
-(คำนวณจาก ${modeLabel} ทั้งหมด ${statsBreakdown.total} งวด)`;
+(คำนวณจาก ${modeLabel} ทงหมด ${statsBreakdown.total} งวด)`;
     navigator.clipboard.writeText(text).then(() => {
       setStatsCopied(true);
       setTimeout(() => setStatsCopied(false), 1500);
@@ -403,19 +403,19 @@ export default function App() {
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 301, ...glassStrong, padding: "32px 28px", width: "85%", maxWidth: 320, textAlign: "center" }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>🔐</div>
         <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Admin เท่านั้น</div>
-        <div style={{ fontSize: 12, color: ink(0.4), marginBottom: 24 }}>ใส่รหัสเพื่อดำเนินการต่อ</div>
+        <div style={{ fontSize: 12, color: ink(0.4), marginBottom: 24 }}>ใส่รหัสเพอดำเนินการต่อ</div>
         <input
           type="password"
           value={adminInput}
           autoFocus
           onChange={e => { setAdminInput(e.target.value); setAdminError(false); }}
           onKeyDown={e => e.key === "Enter" && confirmAdmin()}
-          placeholder="รหัสผ่าน"
+          placeholder="รหัสผาน"
           style={{ width: "100%", background: ink(0.07), border: `1px solid ${adminError ? "rgba(255,100,100,0.6)" : ink(0.12)}`, borderRadius: 14, padding: "13px 16px", color: t.text, fontSize: 18, fontFamily: "inherit", textAlign: "center", letterSpacing: 4, marginBottom: 10 }}
         />
         {adminError && <div style={{ fontSize: 12, color: "#ff8fa3", marginBottom: 10 }}>รหัสไม่ถูกต้อง ❌</div>}
         <button onClick={confirmAdmin} style={{ width: "100%", padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))", marginBottom: 8 }}>
-          ยืนยัน
+          ยนยัน
         </button>
         <button onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ width: "100%", padding: "11px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, color: ink(0.4), background: "transparent" }}>
           ยกเลิก
@@ -433,7 +433,7 @@ export default function App() {
       const ordered = drillOrder === "asc" ? [...history].reverse() : history;
       const divider = "➖➖➖➖➖➖➖➖";
       const lines = ordered.map(h => `${drillFlag} ${h.date} | ${h.top3}-${h.bot2}`);
-      const text = `แนวทางNORTN\n${drillFlag} สถิติย้อนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
+      const text = `แนวทางNORTN\n${drillFlag} สถิติยอนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
       navigator.clipboard.writeText(text).then(() => {
         setDrillCopied(true);
         setTimeout(() => setDrillCopied(false), 1500);
@@ -448,7 +448,7 @@ export default function App() {
           <button onClick={() => setDrillName(null)} style={{ ...glass, border: "none", color: accent, fontSize: 15, fontWeight: 600, padding: "8px 16px", cursor: "pointer", background: `${accent}20` }}>‹ กลับ</button>
           <div style={{ flex: 1, textAlign: "center" }}>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{drillFlag} {drillName}</div>
-            <div style={{ fontSize: 11, color: ink(0.4), marginTop: 2 }}>ผลย้อนหลัง</div>
+            <div style={{ fontSize: 11, color: ink(0.4), marginTop: 2 }}>ผลยอนหลัง</div>
           </div>
           <button onClick={() => setDrillOrder(o => o === "asc" ? "desc" : "asc")} style={{ ...glass, border: "none", color: accent, fontSize: 11, fontWeight: 600, padding: "8px 10px", cursor: "pointer", background: `${accent}20`, whiteSpace: "nowrap" }}>
             {drillOrder === "asc" ? "เก่า→ใหม่" : "ใหม่→เก่า"}
@@ -484,12 +484,12 @@ export default function App() {
           <div style={{ fontSize: 10, color: ink(0.35), marginBottom: 10, paddingLeft: 4, letterSpacing: 1.5, textTransform: "uppercase" }}>สถิติย้อนหลัง · {history.length} งวด</div>
           <div style={{ ...glass, overflow: "hidden", padding: 0 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "12px 16px", borderBottom: `1px solid ${ink(0.07)}`, fontSize: 10, color: ink(0.35), letterSpacing: 1.5, textTransform: "uppercase" }}>
-              <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตัวล่าง</span><span style={{ textAlign: "center" }}>เลขปิด</span>
+              <span>วันที่</span><span style={{ textAlign: "center" }}>3 ตัวบน</span><span style={{ textAlign: "center" }}>2 ตวล่าง</span><span style={{ textAlign: "center" }}>เลขปิด</span>
             </div>
             {history.map((h, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 70px 80px", padding: "13px 16px", borderTop: i > 0 ? `1px solid ${ink(0.05)}` : "none", background: i === 0 ? `${accent}0d` : "transparent", alignItems: "center" }}>
                 <span style={{ fontSize: 13, color: i === 0 ? accent : ink(0.55), display: "flex", alignItems: "center", gap: 6 }}>
-                  {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสุด</span>}
+                  {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสด</span>}
                   {h.date}
                 </span>
                 <span style={{ textAlign: "center", fontSize: 20, fontWeight: 800, color: accent, letterSpacing: 2 }}>{h.top3}</span>
@@ -568,10 +568,10 @@ export default function App() {
       <div style={{ ...glassStrong, borderRadius: "0 0 32px 32px", padding: "54px 20px 18px", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <ThemeToggle mode={themeMode} onToggle={() => setThemeMode(m => m === "light" ? "dark" : "light")} />
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>สรุปผล</div>
+          <div style={{ fontSize: 10, color: ink(0.4), letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>สรปผล</div>
           <div style={{ fontSize: 20, fontWeight: 800 }}>🎯 หวยประจำวัน</div>
           <div style={{ fontSize: 11, color: ink(0.4), marginTop: 3 }}>
-            {loaded ? `${dates.length} วัน · ${Object.values(allData).flat().length} รายการ` : "⏳ กำลังโหลด..."}
+            {loaded ? `${dates.length} วัน · ${Object.values(allData).flat().length} รายการ` : "⏳ กลังโหลด..."}
           </div>
         </div>
         <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer", background: ink(0.1), backdropFilter: "blur(10px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5 }}>
@@ -596,7 +596,7 @@ export default function App() {
               </div>
               <textarea value={addTab === "result" ? inputText : closedText}
                 onChange={e => addTab === "result" ? setInputText(e.target.value) : setClosedText(e.target.value)}
-                placeholder={addTab === "result" ? "🇱 ลาวประตูชัย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
+                placeholder={addTab === "result" ? "🇱 ลาวประตูชย 🇱🇦 : 622 - 40\n..." : "🇱 ลาวประตูชัย  ::  16 60\n..."}
                 rows={10} style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: 16 }} />
               <button onClick={addTab === "result" ? handleAddResult : handleAddClosed} style={{ width: "100%", padding: "15px", borderRadius: 18, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: addTab === "result" ? "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" : "linear-gradient(135deg, rgba(138,43,226,0.8), rgba(116,143,252,0.6))", backdropFilter: "blur(10px)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
                 {addTab === "result" ? "💾 บันทึกผลหวย" : "🔒 บันทึกเลขปิด"}
@@ -657,7 +657,7 @@ export default function App() {
 
                 <Divider color={ink(0.08)} />
 
-                <StatRow label="เลขลงท้ายเลขคู่" value={statsBreakdown.evenOdd[0]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
+                <StatRow label="เลขลงท้ายเลขคู" value={statsBreakdown.evenOdd[0]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
                 <StatRow label="เลขลงท้ายเลขคี่" value={statsBreakdown.evenOdd[1]} accent={statsAccent} labelColor={ink(0.55)} trackColor={ink(0.07)} />
 
                 <button onClick={copyStatsText} style={{ width: "100%", marginTop: 16, padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 700, color: "#fff", background: `linear-gradient(135deg, ${statsAccent}cc, rgba(255,255,255,0.15))` }}>
@@ -674,7 +674,7 @@ export default function App() {
               <div style={{ textAlign: "center", padding: "80px 20px", color: ink(0.25) }}>
                 <div style={{ fontSize: 56 }}>{loaded ? "📭" : "⏳"}</div>
                 <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
-                {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มุมขวาบนเพื่อเพิ่มข้อมูล</div>}
+                {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มมขวาบนเพื่อเพิ่มข้อมูล</div>}
               </div>
             ) : (
               <>
