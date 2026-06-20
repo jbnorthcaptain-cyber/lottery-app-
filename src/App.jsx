@@ -135,7 +135,7 @@ function ThemeToggle({ mode, onToggle }) {
           transition: "left 0.35s cubic-bezier(.4,0,.2,1), background 0.35s ease",
         }}
       >
-        {isDark ? "🌝" : "🌞"}
+        {isDark ? "🌚" : "🌝"}
       </div>
     </button>
   );
