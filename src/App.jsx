@@ -256,13 +256,13 @@ export default function App() {
   const handleAddResult = async () => {
     if (!inputDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
-    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถกรูปแบบ"); return; }
+    if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถูกรูปแบบ"); return; }
     const existing = allData[inputDate.trim()] || [];
     const merged = parsed.map(r => {
       const old = existing.find(e => e.name === r.name);
       return { ...r, closed: old?.closed || [] };
     });
-    setSaveStatus("⏳ กำลังบนทึก...");
+    setSaveStatus("⏳ กำลังบันทึก...");
     try {
       await api.upsert(inputDate.trim(), merged);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: merged }));
@@ -270,7 +270,7 @@ export default function App() {
       setSaveStatus("✓ บันทึกแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setInputText(""); setInputDate(""); setTab("view");
-    } catch (e) { setSaveStatus("⚠️ บนทึกไม่ได้"); }
+    } catch (e) { setSaveStatus("⚠️ บันทึกไม่ได้"); }
   };
 
   const handleAddClosed = async () => {
@@ -278,7 +278,7 @@ export default function App() {
     const closedMap = parseClosed(closedText);
     if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลเลขปิด"); return; }
     const existing = allData[inputDate.trim()];
-    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวนนี้"); return; }
+    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวันนี้"); return; }
     const updated = existing.map(r => {
       const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
       return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
@@ -406,19 +406,19 @@ export default function App() {
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 301, ...glassStrong, padding: "32px 28px", width: "85%", maxWidth: 320, textAlign: "center" }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>🔐</div>
         <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Admin เท่านั้น</div>
-        <div style={{ fontSize: 12, color: inkText(0.4), marginBottom: 24 }}>ใส่รหัสเพอดำเนินการต่อ</div>
+        <div style={{ fontSize: 12, color: inkText(0.4), marginBottom: 24 }}>ใส่รหัสเพื่อดำเนินการต่อ</div>
         <input
           type="password"
           value={adminInput}
           autoFocus
           onChange={e => { setAdminInput(e.target.value); setAdminError(false); }}
           onKeyDown={e => e.key === "Enter" && confirmAdmin()}
-          placeholder="รหัสผาน"
+          placeholder="รหัสผ่าน"
           style={{ width: "100%", background: ink(0.07), border: `1px solid ${adminError ? "rgba(255,100,100,0.6)" : ink(0.12)}`, borderRadius: 14, padding: "13px 16px", color: t.text, fontSize: 18, fontFamily: "inherit", textAlign: "center", letterSpacing: 4, marginBottom: 10 }}
         />
         {adminError && <div style={{ fontSize: 12, color: "#ff8fa3", marginBottom: 10 }}>รหัสไม่ถูกต้อง ❌</div>}
         <button onClick={confirmAdmin} style={{ width: "100%", padding: "13px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))", marginBottom: 8 }}>
-          ยนยัน
+          ยืนยัน
         </button>
         <button onClick={() => { setShowAdminPrompt(false); setPendingAction(null); }} style={{ width: "100%", padding: "11px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, color: inkText(0.4), background: "transparent" }}>
           ยกเลิก
@@ -436,7 +436,7 @@ export default function App() {
       const ordered = drillOrder === "asc" ? [...history].reverse() : history;
       const divider = "➖➖➖➖➖➖➖➖";
       const lines = ordered.map(h => `${drillFlag} ${h.date} | ${h.top3}-${h.bot2}`);
-      const text = `แนวทางNORTN\n${drillFlag} สถติย้อนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
+      const text = `แนวทางNORTN\n${drillFlag} สถิติย้อนหลัง ${drillName} ${drillFlag}\n${divider}\n${lines.join("\n")}\n${divider}`;
       navigator.clipboard.writeText(text).then(() => {
         setDrillCopied(true);
         setTimeout(() => setDrillCopied(false), 1500);
