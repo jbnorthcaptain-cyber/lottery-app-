@@ -35,8 +35,8 @@ const api = {
 
 const FLAG_MAP = {
   "🇱🇦": "ลาว", "🇯": "ญี่ปุ่น", "🇻🇳": "เวียดนาม", "🇨": "จีน",
-  "🇭🇰": "ฮ่องกง", "🇹🇼": "ไตหวัน", "🇰🇷": "เกาหล", "🇹🇭": "ไทย",
-  "🇸🇬": "สิงคโปร์", "🇺": "อเมริกา", "🇬🇧": "องกฤษ", "🇩🇪": "เยอรมัน",
+  "🇭🇰": "ฮ่องกง", "🇹🇼": "ไต้หวัน", "🇰🇷": "เกาหลี", "🇹🇭": "ไทย",
+  "🇸🇬": "สิงคโปร์", "🇺🇸": "อเมริกา", "🇬🇧": "อังกฤษ", "🇩🇪": "เยอรมัน",
   "🇷🇺": "รัสเซีย", "🇮🇳": "อินเดีย",
 };
 const COLOR_MAP = {
@@ -55,7 +55,7 @@ function parseResults(text) {
     const m = line.match(/^([\u{1F1E0}-\u{1F1FF}]{2})\s+(.+?)\s+[\u{1F1E0}-\u{1F1FF}]{2}\s*:\s*(\d{3})\s*[-–]\s*(\d{2})$/u);
     if (m) {
       const flag = m[1];
-      const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อนๆ";
+      const country = Object.entries(FLAG_MAP).find(([f]) => f === flag)?.[1] || "อื่นๆ";
       results.push({ flag, country, name: m[2].trim(), top3: m[3], bot2: m[4], closed: [] });
     }
   }
@@ -135,7 +135,7 @@ function ThemeToggle({ mode, onToggle }) {
           transition: "left 0.35s cubic-bezier(.4,0,.2,1), background 0.35s ease",
         }}
       >
-        {isDark ? "🌚" : "🌝"}
+        {isDark ? "🌝" : "🌞"}
       </div>
     </button>
   );
@@ -181,6 +181,10 @@ export default function App() {
   const [drillCopied, setDrillCopied] = useState(false);
   const [drillOrder, setDrillOrder] = useState("asc"); // 'asc' = เก่า→ใหม่, 'desc' = ใหม่→เก่า
   const [themeMode, setThemeMode] = useState("light"); // 'light' | 'dark'
+  const [multiSelected, setMultiSelected] = useState([]); // ชื่อหวยที่เลือกไว้สำหรับคัดลอกรวม (สูงสุด 10)
+  const [multiOrder, setMultiOrder] = useState("asc"); // 'asc' = เก่า→ใหม่, 'desc' = ใหม่→เก่า
+  const [multiCopied, setMultiCopied] = useState(false);
+  const [multiLimitNotice, setMultiLimitNotice] = useState(false);
 
   const THEME_COLORS = {
     dark: {
@@ -202,7 +206,7 @@ export default function App() {
   };
   const t = THEME_COLORS[themeMode];
   const ink = (opacity) => themeMode === "light" ? `rgba(0,0,0,${opacity})` : `rgba(255,255,255,${opacity})`;
-  // ใช้กับสีตัวอกษรโดยเฉพาะ — โหมดสว่าง = ดำสนิท #000000 เสมอ (ไม่มีไล่ความจาง), โหมดมืด = เหมือนเดิมทุกประการ
+  // ใช้กับสีตัวอักษรโดยเฉพาะ — โหมดสว่าง = ดำสนิท #000000 เสมอ (ไม่มีไล่ความจาง), โหมดมืด = เหมือนเดิมทุกประการ
   const inkText = (opacity) => themeMode === "light" ? "#000000" : ink(opacity);
 
   const glass = {
@@ -294,7 +298,7 @@ export default function App() {
   };
 
   const handleDelete = async (date) => {
-    if (!window.confirm(`ยืนยันลบขอมูลวันที่ ${date} ?`)) return;
+    if (!window.confirm(`ยืนยันลบข้อมูลวันที่ ${date} ?`)) return;
     await api.remove(date);
     const newData = { ...allData };
     delete newData[date];
@@ -310,6 +314,42 @@ export default function App() {
         const row = allData[d]?.find(r => r.name === name);
         return row ? { date: d, top3: row.top3, bot2: row.bot2, closed: row.closed || [] } : null;
       }).filter(Boolean).reverse();
+  };
+
+  // --- คัดลอกผลย้อนหลังหลายหวยรวมเป็นคลิปบอร์ดเดียว (สูงสุด 10 หวย) ---
+  const toggleMultiSelect = (name) => {
+    setMultiSelected(prev => {
+      if (prev.includes(name)) return prev.filter(n => n !== name);
+      if (prev.length >= 10) {
+        setMultiLimitNotice(true);
+        setTimeout(() => setMultiLimitNotice(false), 1800);
+        return prev;
+      }
+      return [...prev, name];
+    });
+  };
+
+  const buildMultiHistoryText = () => {
+    if (multiSelected.length === 0) return "";
+    const divider = "➖➖➖➖➖➖➖➖";
+    const blocks = multiSelected.map(name => {
+      const info = lotteryList.find(l => l.name === name);
+      const flag = info?.flag || "";
+      const history = buildHistory(name);
+      const ordered = multiOrder === "asc" ? [...history].reverse() : history;
+      const lines = ordered.map(h => `${flag} ${h.date} | ${h.top3}-${h.bot2}`);
+      return `${flag} สถิติย้อนหลัง ${name} ${flag}\n${divider}\n${lines.join("\n")}\n${divider}`;
+    });
+    return `แนวทางNORTN\n${blocks.join("\n\n")}`;
+  };
+
+  const copyMultiHistory = () => {
+    const text = buildMultiHistoryText();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setMultiCopied(true);
+      setTimeout(() => setMultiCopied(false), 1500);
+    });
   };
 
   // --- สถิติโอกาสออกเลข ---
@@ -362,7 +402,7 @@ export default function App() {
 เลข 50 ถึง 74 โอกาสออก ${statsBreakdown.quarters[2]}%
 เลข 75 ถึง 99 โอกาสออก ${statsBreakdown.quarters[3]}%
 
-เลขลงท้ายเลขคู โอกาสออก ${statsBreakdown.evenOdd[0]}%
+เลขลงท้ายเลขคู่ โอกาสออก ${statsBreakdown.evenOdd[0]}%
 เลขลงท้ายเลขคี่ โอกาสออก ${statsBreakdown.evenOdd[1]}%
 
 (คำนวณจาก ${modeLabel} ทั้งหมด ${statsBreakdown.total} งวด)`;
@@ -523,7 +563,7 @@ export default function App() {
             <div style={{ width: 36, height: 4, borderRadius: 2, background: ink(0.25), margin: "0 auto 20px" }} />
             <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>เมนู</div>
 
-            {/* ดูผล - ไม่ต้องใสรหัส */}
+            {/* ดูผล - ไม่ต้องใส่รหัส */}
             <button onClick={() => { setTab("view"); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "view" ? "rgba(116,143,252,0.2)" : ink(0.06), color: tab === "view" ? "#748ffc" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: tab === "view" ? 700 : 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>📋</span>
               <span>ดูผลหวย</span>
@@ -537,6 +577,13 @@ export default function App() {
               {tab === "stats" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#ffd43b" }}>● กำลังใช้</span>}
             </button>
 
+            {/* คัดลอกหลายหวย - ไม่ต้องใส่รหัส */}
+            <button onClick={() => { setTab("multiCopy"); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "multiCopy" ? "rgba(116,143,252,0.2)" : ink(0.06), color: tab === "multiCopy" ? "#748ffc" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: tab === "multiCopy" ? 700 : 500, marginBottom: 8, textAlign: "left" }}>
+              <span style={{ fontSize: 20 }}>📑</span>
+              <span>คัดลอกหลายหวย</span>
+              {tab === "multiCopy" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#748ffc" }}>● กำลังใช้</span>}
+            </button>
+
             {/* เพิ่มผลหวย - ต้องใส่รหัส */}
             <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("result"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "result" ? "rgba(169,227,75,0.2)" : ink(0.06), color: tab === "add" && addTab === "result" ? "#a9e34b" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 8, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>➕</span>
@@ -547,14 +594,14 @@ export default function App() {
             {/* เพิ่มเลขปิด - ต้องใส่รหัส */}
             <button onClick={() => requireAdmin(() => { setTab("add"); setAddTab("closed"); setMenuOpen(false); })} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", borderRadius: 18, border: "none", cursor: "pointer", background: tab === "add" && addTab === "closed" ? "rgba(255,212,59,0.2)" : ink(0.06), color: tab === "add" && addTab === "closed" ? "#ffd43b" : t.text, fontFamily: "inherit", fontSize: 16, fontWeight: 500, marginBottom: 16, textAlign: "left" }}>
               <span style={{ fontSize: 20 }}>🔒</span>
-              <span>เพมเลขปิด</span>
+              <span>เพิ่มเลขปิด</span>
               <span style={{ marginLeft: "auto", fontSize: 11, color: inkText(0.3) }}>🔐</span>
             </button>
 
             {activeDate && (
               <>
                 <div style={{ height: 1, background: ink(0.1), marginBottom: 16 }} />
-                <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>จดการ · {activeDate}</div>
+                <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>จัดการ · {activeDate}</div>
                 {/* ลบ - ต้องใส่รหัส */}
                 <button onClick={() => requireAdmin(() => handleDelete(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.2)", cursor: "pointer", background: "rgba(255,100,100,0.08)", color: "rgba(255,143,163,0.8)", fontFamily: "inherit", fontSize: 14, fontWeight: 500, textAlign: "left" }}>
                   <span style={{ fontSize: 16 }}>🗑</span>
@@ -599,7 +646,7 @@ export default function App() {
               </div>
               <textarea value={addTab === "result" ? inputText : closedText}
                 onChange={e => addTab === "result" ? setInputText(e.target.value) : setClosedText(e.target.value)}
-                placeholder={addTab === "result" ? "🇱 ลาวประตูชย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
+                placeholder={addTab === "result" ? "🇱 ลาวประตูชัย 🇱🇦 : 622 - 40\n..." : "🇱🇦 ลาวประตูชัย  ::  16 60\n..."}
                 rows={10} style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 13, fontFamily: "monospace", resize: "vertical", marginBottom: 16 }} />
               <button onClick={addTab === "result" ? handleAddResult : handleAddClosed} style={{ width: "100%", padding: "15px", borderRadius: 18, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: addTab === "result" ? "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" : "linear-gradient(135deg, rgba(138,43,226,0.8), rgba(116,143,252,0.6))", backdropFilter: "blur(10px)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
                 {addTab === "result" ? "💾 บันทึกผลหวย" : "🔒 บันทึกเลขปิด"}
@@ -630,7 +677,7 @@ export default function App() {
               <div style={{ textAlign: "center", padding: "60px 20px", color: inkText(0.25) }}>
                 <div style={{ fontSize: 48 }}>📭</div>
                 <div style={{ marginTop: 12, fontSize: 14 }}>
-                  ยังไม่มีข้อมูล{statsMode === "top" ? "3 ตวบน" : "2 ตัวล่าง"}ของหวยนี้
+                  ยังไม่มีข้อมูล{statsMode === "top" ? "3 ตัวบน" : "2 ตัวล่าง"}ของหวยนี้
                 </div>
               </div>
             ) : (
@@ -671,13 +718,78 @@ export default function App() {
           </>
         )}
 
+        {tab === "multiCopy" && (
+          <>
+            <div style={{ ...glass, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase" }}>เลือกหวยที่จะคัดลอก (สูงสุด 10)</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: multiSelected.length >= 10 ? "#ff6b6b" : inkText(0.5) }}>{multiSelected.length}/10</div>
+              </div>
+
+              {lotteryList.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "30px 0", color: inkText(0.3), fontSize: 13 }}>ยังไม่มีข้อมูลหวยให้เลือก</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto" }}>
+                  {lotteryList.map(l => {
+                    const checked = multiSelected.includes(l.name);
+                    const disabled = !checked && multiSelected.length >= 10;
+                    return (
+                      <button
+                        key={l.name}
+                        onClick={() => toggleMultiSelect(l.name)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          padding: "12px 14px", borderRadius: 14, border: "none",
+                          cursor: disabled ? "not-allowed" : "pointer",
+                          background: checked ? "rgba(116,143,252,0.18)" : ink(0.05),
+                          opacity: disabled ? 0.4 : 1,
+                          fontFamily: "inherit", fontSize: 14, color: t.text, textAlign: "left",
+                        }}
+                      >
+                        <span style={{
+                          width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                          border: `2px solid ${checked ? "#748ffc" : ink(0.25)}`,
+                          background: checked ? "#748ffc" : "transparent",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 12, color: "#fff", fontWeight: 800,
+                        }}>{checked ? "✓" : ""}</span>
+                        <span>{l.flag} {l.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {multiLimitNotice && (
+                <div style={{ marginTop: 10, fontSize: 12, color: "#ff6b6b", textAlign: "center" }}>เลือกได้สูงสุด 10 หวยครับ</div>
+              )}
+            </div>
+
+            {multiSelected.length > 0 && (
+              <div style={{ ...glassStrong, padding: 20 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                  <button onClick={() => setMultiOrder(o => o === "asc" ? "desc" : "asc")} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, background: ink(0.08), color: t.text }}>
+                    {multiOrder === "asc" ? "เก่า→ใหม่" : "ใหม่→เก่า"}
+                  </button>
+                  <button onClick={() => setMultiSelected([])} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, background: "rgba(255,100,100,0.1)", color: "#ff8fa3" }}>
+                    ล้างที่เลือก
+                  </button>
+                </div>
+                <button onClick={copyMultiHistory} style={{ width: "100%", padding: "14px", borderRadius: 16, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.85), rgba(169,227,75,0.65))" }}>
+                  {multiCopied ? `✓ คัดลอกแล้ว (${multiSelected.length} หวย)` : `📋 คัดลอกผลย้อนหลัง (${multiSelected.length} หวย)`}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
         {tab === "view" && (
           <>
             {dates.length === 0 ? (
               <div style={{ textAlign: "center", padding: "80px 20px", color: inkText(0.25) }}>
                 <div style={{ fontSize: 56 }}>{loaded ? "📭" : "⏳"}</div>
-                <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมล" : "กำลังโหลด..."}</div>
-                {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มุมขวาบนเพอเพิ่มข้อมูล</div>}
+                <div style={{ marginTop: 16, fontSize: 16, fontWeight: 600 }}>{loaded ? "ยังไม่มีข้อมูล" : "กำลังโหลด..."}</div>
+                {loaded && <div style={{ marginTop: 8, fontSize: 13 }}>กดปุ่ม ☰ มุมขวาบนเพื่อเพิ่มข้อมูล</div>}
               </div>
             ) : (
               <>
@@ -755,5 +867,6 @@ export default function App() {
         )}
       </div>
     </div>
+
   );
 }
