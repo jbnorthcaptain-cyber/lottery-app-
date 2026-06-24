@@ -185,6 +185,7 @@ export default function App() {
   const [multiOrder, setMultiOrder] = useState("asc"); // 'asc' = เก่า→ใหม่, 'desc' = ใหม่→เก่า
   const [multiCopied, setMultiCopied] = useState(false);
   const [multiLimitNotice, setMultiLimitNotice] = useState(false);
+  const [multiDays, setMultiDays] = useState(15); // 0 = ทั้งหมด
 
   const THEME_COLORS = {
     dark: {
@@ -281,15 +282,41 @@ export default function App() {
     if (!inputDate.trim() || !closedText.trim()) return;
     const closedMap = parseClosed(closedText);
     if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลเลขปิด"); return; }
+
+    const lookupInfo = (name) => {
+      for (const d of Object.keys(allData)) {
+        const found = allData[d]?.find(r => r.name === name);
+        if (found) return { flag: found.flag, country: found.country };
+      }
+      return { flag: "", country: "อื่นๆ" };
+    };
+
     const existing = allData[inputDate.trim()];
-    if (!existing) { setSaveStatus("⚠️ ยังไม่มีผลหวยวันนี้"); return; }
-    const updated = existing.map(r => {
-      const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
-      return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
-    });
+    let updated;
+
+    if (!existing) {
+      // ยังไม่มีผลวันนี้ — สร้าง stub record จากเลขปิดเลย
+      updated = Object.entries(closedMap).map(([name, nums]) => {
+        const { flag, country } = lookupInfo(name);
+        return { flag, country, name, top3: "", bot2: "", closed: nums };
+      });
+    } else {
+      // มีผลอยู่แล้ว — อัปเดต closed ใน existing และเพิ่ม stub สำหรับชื่อที่ไม่มี
+      updated = existing.map(r => {
+        const key = Object.keys(closedMap).find(k => k.trim() === r.name.trim());
+        return { ...r, closed: key !== undefined ? closedMap[key] : (r.closed || []) };
+      });
+      for (const [name, nums] of Object.entries(closedMap)) {
+        if (!existing.find(r => r.name.trim() === name.trim())) {
+          const { flag, country } = lookupInfo(name);
+          updated.push({ flag, country, name, top3: "", bot2: "", closed: nums });
+        }
+      }
+    }
+
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
-      await api.patch(inputDate.trim(), updated);
+      await api.upsert(inputDate.trim(), updated);
       setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
       setSaveStatus("✓ บันทึกเลขปิดแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
@@ -335,8 +362,9 @@ export default function App() {
     const blocks = multiSelected.map(name => {
       const info = lotteryList.find(l => l.name === name);
       const flag = info?.flag || "";
-      const history = buildHistory(name);
-      const ordered = multiOrder === "asc" ? [...history].reverse() : history;
+      const history = buildHistory(name); // newest first
+      const sliced = multiDays > 0 ? history.slice(0, multiDays) : history;
+      const ordered = multiOrder === "asc" ? [...sliced].reverse() : sliced;
       const lines = ordered.map(h => `${flag} ${h.date} | ${h.top3}-${h.bot2}`);
       return `${flag} สถิติย้อนหลัง ${name} ${flag}\n${divider}\n${lines.join("\n")}\n${divider}`;
     });
@@ -721,6 +749,15 @@ export default function App() {
         {tab === "multiCopy" && (
           <>
             <div style={{ ...glass, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase" }}>ช่วงวันที่จะคัดลอก</div>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+                {[[15,"15 วัน"],[30,"30 วัน"],[60,"60 วัน"],[0,"ทั้งหมด"]].map(([d, label]) => (
+                  <button key={d} onClick={() => setMultiDays(d)} style={{ flex: 1, padding: "9px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: multiDays === d ? 700 : 400, background: multiDays === d ? "rgba(116,143,252,0.25)" : ink(0.06), color: multiDays === d ? "#748ffc" : inkText(0.6) }}>{label}</button>
+                ))}
+              </div>
+
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase" }}>เลือกหวยที่จะคัดลอก (สูงสุด 10)</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: multiSelected.length >= 10 ? "#ff6b6b" : inkText(0.5) }}>{multiSelected.length}/10</div>
