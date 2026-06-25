@@ -533,15 +533,17 @@ export default function App() {
             <div style={{ ...glassStrong, padding: "28px 20px", marginBottom: 20, textAlign: "center", background: `linear-gradient(135deg, ${accent}14, rgba(255,255,255,0.05))`, borderColor: `${accent}40` }}>
               <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>งวดวันที่</div>
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 20 }}>{latest.date}</div>
-              <div style={{ fontSize: 52, fontWeight: 800, letterSpacing: 10, marginBottom: 20, textShadow: `0 0 40px ${accent}66` }}>{latest.top3}{latest.bot2}</div>
+              <div style={{ fontSize: 52, fontWeight: 800, letterSpacing: 10, marginBottom: 20, textShadow: `0 0 40px ${accent}66`, color: (latest.top3 && latest.bot2) ? "inherit" : inkText(0.3) }}>
+                {(latest.top3 && latest.bot2) ? `${latest.top3}${latest.bot2}` : "รอผล"}
+              </div>
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <div style={{ flex: 1, borderRight: `1px solid ${ink(0.08)}` }}>
                   <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1, marginBottom: 6 }}>3 ตัวบน</div>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: accent }}>{latest.top3}</div>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: latest.top3 ? accent : inkText(0.3) }}>{latest.top3 || "—"}</div>
                 </div>
                 <div style={{ flex: 1, borderRight: latest.closed?.length > 0 ? `1px solid ${ink(0.08)}` : "none" }}>
                   <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1, marginBottom: 6 }}>2 ตัวล่าง</div>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: t.teal }}>{latest.bot2}</div>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: latest.bot2 ? t.teal : inkText(0.3) }}>{latest.bot2 || "—"}</div>
                 </div>
                 {latest.closed?.length > 0 && (
                   <div style={{ flex: 1 }}>
@@ -563,8 +565,8 @@ export default function App() {
                   {i === 0 && <span style={{ fontSize: 9, background: accent, color: "#000", borderRadius: 6, padding: "1px 6px", fontWeight: 800 }}>ล่าสด</span>}
                   {h.date}
                 </span>
-                <span style={{ textAlign: "center", fontSize: 20, fontWeight: 800, color: accent, letterSpacing: 2 }}>{h.top3}</span>
-                <span style={{ textAlign: "center", fontSize: 17, fontWeight: 700, color: t.teal }}>{h.bot2}</span>
+                <span style={{ textAlign: "center", fontSize: 20, fontWeight: 800, color: h.top3 ? accent : inkText(0.3), letterSpacing: 2 }}>{h.top3 || <span style={{ fontSize: 11, fontWeight: 500 }}>รอผล</span>}</span>
+                <span style={{ textAlign: "center", fontSize: 17, fontWeight: 700, color: h.bot2 ? t.teal : inkText(0.3) }}>{h.bot2 || <span style={{ fontSize: 11, fontWeight: 500 }}>รอผล</span>}</span>
                 <span style={{ textAlign: "center", fontSize: 13, fontWeight: 600, color: t.gold }}>{h.closed?.join(" ") || "—"}</span>
               </div>
             ))}
@@ -889,8 +891,8 @@ export default function App() {
                             onTouchEnd={e => e.currentTarget.style.background = "transparent"}
                           >
                             <span style={{ fontSize: 13, color: inkText(0.8), fontWeight: 500 }}>{r.name} <span style={{ color: inkText(0.2) }}>›</span></span>
-                            <span style={{ textAlign: "center", fontSize: 18, fontWeight: 800, color: accent, letterSpacing: 2 }}>{r.top3}</span>
-                            <span style={{ textAlign: "center", fontSize: 16, fontWeight: 700, color: t.teal }}>{r.bot2}</span>
+                            <span style={{ textAlign: "center", fontSize: r.top3 ? 18 : 12, fontWeight: 800, color: r.top3 ? accent : inkText(0.3), letterSpacing: r.top3 ? 2 : 0 }}>{r.top3 || "รอผล"}</span>
+                            <span style={{ textAlign: "center", fontSize: r.bot2 ? 16 : 12, fontWeight: 700, color: r.bot2 ? t.teal : inkText(0.3) }}>{r.bot2 || "รอผล"}</span>
                             {hasClosed && <span style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: r.closed?.length ? t.gold : inkText(0.15) }}>{r.closed?.join(" ") || "—"}</span>}
                           </div>
                         ))}
