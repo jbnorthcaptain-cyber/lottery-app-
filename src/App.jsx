@@ -267,10 +267,21 @@ export default function App() {
       const old = existing.find(e => e.name === r.name);
       return { ...r, closed: old?.closed || [] };
     });
+    // เก็บ stub (เลขปิดล่วงหน้า) ที่ไม่มีในชุดผลที่เพิ่งวาง
+    const stubs = existing.filter(
+      e => !parsed.find(p => p.name === e.name) && e.closed?.length > 0
+    );
+    const finalResults = [...merged, ...stubs];
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
-      await api.upsert(inputDate.trim(), merged);
-      setAllData(prev => ({ ...prev, [inputDate.trim()]: merged }));
+      if (allData[inputDate.trim()]) {
+        // มี record แล้ว → patch (update in-place ไม่สร้าง row ซ้ำ)
+        await api.patch(inputDate.trim(), finalResults);
+      } else {
+        // record ใหม่ → upsert
+        await api.upsert(inputDate.trim(), finalResults);
+      }
+      setAllData(prev => ({ ...prev, [inputDate.trim()]: finalResults }));
       setActiveDate(inputDate.trim());
       setSaveStatus("✓ บันทึกแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
@@ -316,7 +327,13 @@ export default function App() {
 
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
-      await api.upsert(inputDate.trim(), updated);
+      if (existing) {
+        // มี record แล้ว → patch (ไม่สร้าง row ซ้ำ)
+        await api.patch(inputDate.trim(), updated);
+      } else {
+        // record ใหม่ → upsert
+        await api.upsert(inputDate.trim(), updated);
+      }
       setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
       setSaveStatus("✓ บันทึกเลขปิดแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
@@ -845,7 +862,7 @@ export default function App() {
                     </select>
                   </div>
                   <button onClick={() => dates.length > 0 && setActiveDate(dates[dates.length - 1])} style={{ width: "100%", padding: "10px", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" }}>
-                    📍 ไปงวดล่าสุด.
+                    📍 ไปงวดล่าสุด
                   </button>
                 </div>
 
