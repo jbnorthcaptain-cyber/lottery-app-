@@ -845,7 +845,7 @@ export default function App() {
                     </select>
                   </div>
                   <button onClick={() => dates.length > 0 && setActiveDate(dates[dates.length - 1])} style={{ width: "100%", padding: "10px", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: "#fff", background: "linear-gradient(135deg, rgba(116,143,252,0.8), rgba(169,227,75,0.6))" }}>
-                    📍 ไปงวดล่าสุด
+                    📍 ไปงวดล่าสุด.
                   </button>
                 </div>
 
