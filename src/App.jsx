@@ -76,6 +76,23 @@ function parseClosed(text) {
   return map;
 }
 
+const THAI_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const THAI_MONTHS_FULL = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+function thaiDateToNum(dateStr) {
+  // "02 มิ.ย. 69" → comparable number e.g. 690602
+  const parts = dateStr?.trim().split(" ");
+  if (!parts || parts.length < 3) return 0;
+  const day = parseInt(parts[0], 10) || 0;
+  const monthIdx = THAI_MONTHS.indexOf(parts[1]) + 1; // 1-12
+  const year = parseInt(parts[2], 10) || 0;
+  return year * 10000 + monthIdx * 100 + day;
+}
+
+function sortDates(arr) {
+  return [...arr].sort((a, b) => thaiDateToNum(a) - thaiDateToNum(b));
+}
+
 function buildBreakdown(nums) {
   const total = nums.length;
   if (total === 0) return null;
@@ -161,6 +178,9 @@ export default function App() {
   const [activeDate, setActiveDate] = useState(null);
   const [inputText, setInputText] = useState("");
   const [inputDate, setInputDate] = useState("");
+  const [inputDay, setInputDay] = useState(() => String(new Date().getDate()).padStart(2, "0"));
+  const [inputMonth, setInputMonth] = useState(() => new Date().getMonth()); // 0-11
+  const [inputYear, setInputYear] = useState(() => (new Date().getFullYear() + 543) % 100); // เช่น 69
   const [closedText, setClosedText] = useState("");
   const [tab, setTab] = useState("view");
   const [addTab, setAddTab] = useState("result");
@@ -232,7 +252,7 @@ export default function App() {
         const data = {};
         for (const row of rows) data[row.date] = row.results;
         setAllData(data);
-        const dates = Object.keys(data).sort();
+        const dates = sortDates(Object.keys(data));
         if (dates.length > 0) setActiveDate(dates[dates.length - 1]);
       } catch (e) {}
       setLoaded(true);
@@ -259,10 +279,10 @@ export default function App() {
   };
 
   const handleAddResult = async () => {
-    if (!inputDate.trim() || !inputText.trim()) return;
+    if (!pickerDate.trim() || !inputText.trim()) return;
     const parsed = parseResults(inputText);
     if (parsed.length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลที่ถูกรูปแบบ"); return; }
-    const existing = allData[inputDate.trim()] || [];
+    const existing = allData[pickerDate] || [];
     const merged = parsed.map(r => {
       const old = existing.find(e => e.name === r.name);
       return { ...r, closed: old?.closed || [] };
@@ -274,15 +294,15 @@ export default function App() {
     const finalResults = [...merged, ...stubs];
     setSaveStatus("⏳ กำลังบันทึก...");
     try {
-      if (allData[inputDate.trim()]) {
+      if (allData[pickerDate]) {
         // มี record แล้ว → patch (update in-place ไม่สร้าง row ซ้ำ)
-        await api.patch(inputDate.trim(), finalResults);
+        await api.patch(pickerDate, finalResults);
       } else {
         // record ใหม่ → upsert
-        await api.upsert(inputDate.trim(), finalResults);
+        await api.upsert(pickerDate, finalResults);
       }
-      setAllData(prev => ({ ...prev, [inputDate.trim()]: finalResults }));
-      setActiveDate(inputDate.trim());
+      setAllData(prev => ({ ...prev, [pickerDate]: finalResults }));
+      setActiveDate(pickerDate);
       setSaveStatus("✓ บันทึกแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setInputText(""); setInputDate(""); setTab("view");
@@ -290,7 +310,7 @@ export default function App() {
   };
 
   const handleAddClosed = async () => {
-    if (!inputDate.trim() || !closedText.trim()) return;
+    if (!pickerDate.trim() || !closedText.trim()) return;
     const closedMap = parseClosed(closedText);
     if (Object.keys(closedMap).length === 0) { setSaveStatus("⚠️ ไม่พบข้อมูลเลขปิด"); return; }
 
@@ -302,7 +322,7 @@ export default function App() {
       return { flag: "", country: "อื่นๆ" };
     };
 
-    const existing = allData[inputDate.trim()];
+    const existing = allData[pickerDate];
     let updated;
 
     if (!existing) {
@@ -329,12 +349,12 @@ export default function App() {
     try {
       if (existing) {
         // มี record แล้ว → patch (ไม่สร้าง row ซ้ำ)
-        await api.patch(inputDate.trim(), updated);
+        await api.patch(pickerDate, updated);
       } else {
         // record ใหม่ → upsert
-        await api.upsert(inputDate.trim(), updated);
+        await api.upsert(pickerDate, updated);
       }
-      setAllData(prev => ({ ...prev, [inputDate.trim()]: updated }));
+      setAllData(prev => ({ ...prev, [pickerDate]: updated }));
       setSaveStatus("✓ บันทึกเลขปิดแล้ว");
       setTimeout(() => setSaveStatus(""), 2000);
       setClosedText(""); setTab("view");
@@ -347,13 +367,13 @@ export default function App() {
     const newData = { ...allData };
     delete newData[date];
     setAllData(newData);
-    const dates = Object.keys(newData).sort();
+    const dates = sortDates(Object.keys(newData));
     setActiveDate(dates.length > 0 ? dates[dates.length - 1] : null);
     setMenuOpen(false);
   };
 
   const buildHistory = (name) => {
-    return Object.keys(allData).sort()
+    return sortDates(Object.keys(allData))
       .map(d => {
         const row = allData[d]?.find(r => r.name === name);
         return row ? { date: d, top3: row.top3, bot2: row.bot2, closed: row.closed || [] } : null;
@@ -457,7 +477,10 @@ export default function App() {
     });
   };
 
-  const dates = Object.keys(allData).sort();
+  const dates = sortDates(Object.keys(allData));
+
+  // วันที่จาก date picker → รูปแบบ "02 มิ.ย. 69"
+  const pickerDate = `${String(inputDay).padStart(2, "0")} ${THAI_MONTHS[inputMonth]} ${String(inputYear).padStart(2, "0")}`;
   const [curDay, curMonth, curYear] = activeDate ? activeDate.split(" ") : ["", "", ""];
   const THAI_MONTH_ORDER = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   const dayOptions = Array.from(new Set(dates.map(d => d.split(" ")[0]))).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
@@ -686,8 +709,33 @@ export default function App() {
             </div>
             <div style={{ ...glassStrong, padding: 20 }}>
               <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>วันที่</div>
-              <input value={inputDate} onChange={e => setInputDate(e.target.value)} placeholder="03 มิ.ย. 69"
-                style={{ width: "100%", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 14, padding: "12px 16px", color: t.text, fontSize: 15, fontFamily: "inherit", marginBottom: 16 }} />
+              {/* Date Picker */}
+              <div style={{ ...glass, padding: "14px 12px", marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
+                {/* วัน */}
+                <select value={inputDay} onChange={e => setInputDay(e.target.value)}
+                  style={{ flex: "0 0 64px", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 12, padding: "10px 4px", color: t.text, fontSize: 16, fontFamily: "inherit", appearance: "none", textAlign: "center", fontWeight: 700 }}>
+                  {Array.from({length: 31}, (_, i) => String(i + 1).padStart(2, "0")).map(d => (
+                    <option key={d} value={d} style={{ color: "#000" }}>{d}</option>
+                  ))}
+                </select>
+                {/* เดือน ชื่อเต็ม */}
+                <select value={inputMonth} onChange={e => setInputMonth(Number(e.target.value))}
+                  style={{ flex: 1, background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 12, padding: "10px 8px", color: t.text, fontSize: 14, fontFamily: "inherit", appearance: "none", textAlign: "center", fontWeight: 700 }}>
+                  {THAI_MONTHS_FULL.map((m, i) => (
+                    <option key={i} value={i} style={{ color: "#000" }}>{m}</option>
+                  ))}
+                </select>
+                {/* ปี พ.ศ. (2 หลักท้าย) */}
+                <select value={inputYear} onChange={e => setInputYear(Number(e.target.value))}
+                  style={{ flex: "0 0 72px", background: ink(0.07), border: `1px solid ${ink(0.12)}`, borderRadius: 12, padding: "10px 4px", color: t.text, fontSize: 16, fontFamily: "inherit", appearance: "none", textAlign: "center", fontWeight: 700 }}>
+                  {[68, 69, 70, 71, 72].map(y => (
+                    <option key={y} value={y} style={{ color: "#000" }}>พ.ศ. {2500 + y}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ fontSize: 11, color: inkText(0.35), marginBottom: 16, paddingLeft: 4 }}>
+                วันที่เลือก: <b>{pickerDate}</b>
+              </div>
               <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>
                 {addTab === "result" ? "วางข้อมูลผลหวย" : "วางข้อมูลเลขปิด"}
               </div>
