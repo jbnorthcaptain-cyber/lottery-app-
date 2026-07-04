@@ -1,4 +1,4 @@
- import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://suixlwkjzipmanyoerwo.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1aXhsd2tqemlwbWFueW9lcndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTMzMTksImV4cCI6MjA5NjQyOTMxOX0.PNuqaaiODvZtyPJ6pxvGOX5-LgUEInmp-4bIUxfOQXY";
@@ -362,13 +362,46 @@ export default function App() {
   };
 
   const handleDelete = async (date) => {
-    if (!window.confirm(`ยืนยันลบข้อมูลวันที่ ${date} ?`)) return;
+    if (!window.confirm(`ยืนยันลบข้อมูลทั้งหมดวันที่ ${date} ?`)) return;
     await api.remove(date);
     const newData = { ...allData };
     delete newData[date];
     setAllData(newData);
     const dates = sortDates(Object.keys(newData));
     setActiveDate(dates.length > 0 ? dates[dates.length - 1] : null);
+    setMenuOpen(false);
+  };
+
+  const handleDeleteClosed = async (date) => {
+    if (!window.confirm(`ยืนยันลบเลขปิดวันที่ ${date} ?`)) return;
+    const existing = allData[date];
+    if (!existing) return;
+    const updated = existing.map(r => ({ ...r, closed: [] }));
+    await api.patch(date, updated);
+    setAllData(prev => ({ ...prev, [date]: updated }));
+    setMenuOpen(false);
+  };
+
+  const handleDeleteResults = async (date) => {
+    if (!window.confirm(`ยืนยันลบผลหวย (3 ตัวบน / 2 ตัวล่าง) วันที่ ${date} ?\nเลขปิดจะยังคงอยู่`)) return;
+    const existing = allData[date];
+    if (!existing) return;
+    // เก็บแค่ row ที่มี closed ไว้เป็น stub / ถ้าไม่มี closed เลยให้ลบ row นั้นทิ้ง
+    const updated = existing
+      .filter(r => r.closed?.length > 0)
+      .map(r => ({ ...r, top3: "", bot2: "" }));
+    if (updated.length === 0) {
+      // ไม่มี closed เลย → ลบทั้ง row
+      await api.remove(date);
+      const newData = { ...allData };
+      delete newData[date];
+      setAllData(newData);
+      const dates = sortDates(Object.keys(newData));
+      setActiveDate(dates.length > 0 ? dates[dates.length - 1] : null);
+    } else {
+      await api.patch(date, updated);
+      setAllData(prev => ({ ...prev, [date]: updated }));
+    }
     setMenuOpen(false);
   };
 
@@ -672,10 +705,25 @@ export default function App() {
               <>
                 <div style={{ height: 1, background: ink(0.1), marginBottom: 16 }} />
                 <div style={{ fontSize: 10, color: inkText(0.4), letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingLeft: 4 }}>จัดการ · {activeDate}</div>
-                {/* ลบ - ต้องใส่รหัส */}
-                <button onClick={() => requireAdmin(() => handleDelete(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.2)", cursor: "pointer", background: "rgba(255,100,100,0.08)", color: "rgba(255,143,163,0.8)", fontFamily: "inherit", fontSize: 14, fontWeight: 500, textAlign: "left" }}>
+
+                {/* ลบเลขปิด */}
+                <button onClick={() => requireAdmin(() => handleDeleteClosed(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", borderRadius: 18, border: "1px solid rgba(255,212,59,0.2)", cursor: "pointer", background: "rgba(255,212,59,0.06)", color: "#ffd43b", fontFamily: "inherit", fontSize: 14, fontWeight: 500, textAlign: "left", marginBottom: 8 }}>
+                  <span style={{ fontSize: 16 }}>🔓</span>
+                  <span>ลบเลขปิดวันที่ {activeDate}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 11, color: inkText(0.3) }}>🔐</span>
+                </button>
+
+                {/* ลบผลหวย (คง closed) */}
+                <button onClick={() => requireAdmin(() => handleDeleteResults(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", borderRadius: 18, border: "1px solid rgba(255,143,163,0.2)", cursor: "pointer", background: "rgba(255,100,100,0.06)", color: "rgba(255,143,163,0.9)", fontFamily: "inherit", fontSize: 14, fontWeight: 500, textAlign: "left", marginBottom: 8 }}>
                   <span style={{ fontSize: 16 }}>🗑</span>
-                  <span>ลบข้อมูลวันที่ {activeDate}</span>
+                  <span>ลบผลหวยวันที่ {activeDate}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 11, color: inkText(0.3) }}>🔐</span>
+                </button>
+
+                {/* ลบทั้งหมด */}
+                <button onClick={() => requireAdmin(() => handleDelete(activeDate))} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", borderRadius: 18, border: "1px solid rgba(255,100,100,0.35)", cursor: "pointer", background: "rgba(255,100,100,0.12)", color: "rgba(255,100,100,0.9)", fontFamily: "inherit", fontSize: 14, fontWeight: 700, textAlign: "left" }}>
+                  <span style={{ fontSize: 16 }}>💥</span>
+                  <span>ลบทั้งหมดวันที่ {activeDate}</span>
                   <span style={{ marginLeft: "auto", fontSize: 11, color: inkText(0.3) }}>🔐</span>
                 </button>
               </>
